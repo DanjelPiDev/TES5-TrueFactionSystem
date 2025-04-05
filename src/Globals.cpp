@@ -28,7 +28,7 @@ namespace NPE {
                                                                             {"npeThalmorFaction", 0x00039F26},
                                                                             {"npeSilverHandFaction", 0x000AA0A4},
                                                                             {"npeThievesGuildFaction", 0x00029DA9}};
-    ;
+    
     const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots = {
         RE::BGSBipedObjectForm::BipedObjectSlot::kHead,     RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
         RE::BGSBipedObjectForm::BipedObjectSlot::kHands,    RE::BGSBipedObjectForm::BipedObjectSlot::kFeet,

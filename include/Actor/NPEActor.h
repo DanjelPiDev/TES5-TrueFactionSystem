@@ -16,7 +16,7 @@ namespace NPE {
         NPCAlertness GetAlertness() const;
         void SetAlertness(NPCAlertness newAlertness);
         void UpdateAlertnessBasedOnCombat();
-
+        void RemoveFromFaction(RE::TESFaction* faction);
     private:
         RE::Actor* actor;
         NPCAlertness alertness = NPCAlertness::RELAXED;
