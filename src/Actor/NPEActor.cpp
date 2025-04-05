@@ -52,4 +52,6 @@ namespace NPE {
     // Method to set the target as hostile
     void NPEActor::SetHostile(RE::Actor* target) {}
 
+    void NPEActor::RemoveFromFaction(RE::TESFaction* faction) { actor->AddToFaction(faction, -1); }
+
 }

@@ -5,7 +5,7 @@
   "version-string": "0.2.6",
   "port-version": 0,
   "license": "Apache-2.0",
-  "homepage": "https://github.com/Dagait/TES5-TrueFactionSystem",
+  "homepage": "https://github.com/NullPointerExcy/TES5-TrueFactionSystem",
   "features": {
     "scripts": {
       "description": "Install Papyrus sources for this program to develop on top of it."

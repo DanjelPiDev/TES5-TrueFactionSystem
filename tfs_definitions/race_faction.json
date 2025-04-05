@@ -1,76 +1,76 @@
 {
   "factions": {
     "npeThalmorFaction": {
-      "best_fit": [ "npeAltmerRace" ],
-      "possible": [ "npeBosmerRace", "npeKhajiitRace" ],
-      "unlikely": [ "npeDunmerRace", "npeImperialRace", "npeNordRace" ],
-      "impossible": [ "npeOrcRace", "npeBretonRace", "npeArgonianRace", "npeRedguardRace" ]
+      "best_fit": [ "HighElfRace" ],
+      "possible": [ "WoodElfRace", "KhajiitRace" ],
+      "unlikely": [ "DarkElfRace", "ImperialRace", "NordRace" ],
+      "impossible": [ "OrcRace", "BretonRace", "ArgonianRace", "RedguardRace" ]
     },
     "npeImperialFaction": {
-      "best_fit": [ "npeImperialRace", "npeBretonRace" ],
-      "possible": [ "npeNordRace", "npeRedguardRace" ],
-      "unlikely": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace" ],
-      "impossible": [ "npeKhajiitRace", "npeArgonianRace", "npeOrcRace" ]
+      "best_fit": [ "ImperialRace", "BretonRace" ],
+      "possible": [ "NordRace", "RedguardRace" ],
+      "unlikely": [ "HighElfRace", "WoodElfRace", "DarkElfRace" ],
+      "impossible": [ "KhajiitRace", "ArgonianRace", "OrcRace" ]
     },
     "npeStormcloaksFaction": {
-      "best_fit": [ "npeNordRace" ],
-      "possible": [ "npeImperialRace", "npeBretonRace" ],
-      "unlikely": [ "npeRedguardRace", "npeOrcRace" ],
-      "impossible": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeKhajiitRace", "npeArgonianRace" ]
+      "best_fit": [ "NordRace" ],
+      "possible": [ "ImperialRace", "BretonRace" ],
+      "unlikely": [ "RedguardRace", "OrcRace" ],
+      "impossible": [ "HighElfRace", "WoodElfRace", "DarkElfRace", "KhajiitRace", "ArgonianRace" ]
     },
     "npeThievesGuildFaction": {
-      "best_fit": [ "npeKhajiitRace", "npeDunmerRace", "npeArgonianRace" ],
-      "possible": [ "npeImperialRace", "npeBretonRace", "npeNordRace" ],
-      "unlikely": [ "npeOrcRace", "npeRedguardRace" ],
-      "impossible": [ "npeAltmerRace", "npeBosmerRace" ]
+      "best_fit": [ "KhajiitRace", "DarkElfRace", "ArgonianRace" ],
+      "possible": [ "ImperialRace", "BretonRace", "NordRace" ],
+      "unlikely": [ "OrcRace", "RedguardRace" ],
+      "impossible": [ "HighElfRace", "WoodElfRace" ]
     },
     "npeDarkBrotherhoodFaction": {
-      "best_fit": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeBretonRace", "npeNordRace", "npeImperialRace", "npeKhajiitRace", "npeArgonianRace", "npeOrcRace", "npeRedguardRace" ],
+      "best_fit": [ "HighElfRace", "WoodElfRace", "DarkElfRace", "BretonRace", "NordRace", "ImperialRace", "KhajiitRace", "ArgonianRace", "OrcRace", "RedguardRace" ],
       "possible": [],
       "unlikely": [],
       "impossible": []
     },
     "npeCompanionsFaction": {
-      "best_fit": [ "npeNordRace" ],
-      "possible": [ "npeImperialRace", "npeBretonRace", "npeRedguardRace" ],
-      "unlikely": [ "npeOrcRace" ],
-      "impossible": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeKhajiitRace", "npeArgonianRace" ]
+      "best_fit": [ "NordRace" ],
+      "possible": [ "ImperialRace", "BretonRace", "RedguardRace" ],
+      "unlikely": [ "OrcRace" ],
+      "impossible": [ "HighElfRace", "WoodElfRace", "DarkElfRace", "KhajiitRace", "ArgonianRace" ]
     },
     "npeCollegeOfWinterholdFaction": {
-      "best_fit": [ "npeAltmerRace", "npeBretonRace" ],
-      "possible": [ "npeDunmerRace", "npeImperialRace" ],
-      "unlikely": [ "npeNordRace", "npeOrcRace", "npeRedguardRace", "npeKhajiitRace" ],
-      "impossible": [ "npeArgonianRace" ]
+      "best_fit": [ "HighElfRace", "BretonRace" ],
+      "possible": [ "DarkElfRace", "ImperialRace" ],
+      "unlikely": [ "NordRace", "OrcRace", "RedguardRace", "KhajiitRace" ],
+      "impossible": [ "ArgonianRace" ]
     },
     "npeOrcStrongholdFaction": {
-      "best_fit": [ "npeOrcRace" ],
-      "possible": [ "npeNordRace" ],
-      "unlikely": [ "npeImperialRace", "npeRedguardRace" ],
-      "impossible": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeKhajiitRace", "npeArgonianRace" ]
+      "best_fit": [ "OrcRace" ],
+      "possible": [ "NordRace" ],
+      "unlikely": [ "ImperialRace", "RedguardRace" ],
+      "impossible": [ "HighElfRace", "WoodElfRace", "DarkElfRace", "KhajiitRace", "ArgonianRace" ]
     },
     "npeForswornFaction": {
-      "best_fit": [ "npeBretonRace" ],
-      "possible": [ "npeNordRace" ],
-      "unlikely": [ "npeImperialRace", "npeRedguardRace" ],
-      "impossible": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeKhajiitRace", "npeArgonianRace", "npeOrcRace" ]
+      "best_fit": [ "BretonRace" ],
+      "possible": [ "NordRace" ],
+      "unlikely": [ "ImperialRace", "RedguardRace" ],
+      "impossible": [ "HighElfRace", "WoodElfRace", "DarkElfRace", "KhajiitRace", "ArgonianRace", "OrcRace" ]
     },
     "npeBanditFaction": {
-      "best_fit": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeBretonRace", "npeNordRace", "npeImperialRace", "npeKhajiitRace", "npeArgonianRace", "npeOrcRace", "npeRedguardRace" ],
+      "best_fit": [ "HighElfRace", "WoodElfRace", "DarkElfRace", "BretonRace", "NordRace", "ImperialRace", "KhajiitRace", "ArgonianRace", "npeOrcRace", "npeRedguardRace" ],
       "possible": [],
       "unlikely": [],
       "impossible": []
     },
     "npeSilverHandFaction": {
-      "best_fit": [ "npeNordRace" ],
-      "possible": [ "npeBretonRace", "npeImperialRace" ],
-      "unlikely": [ "npeRedguardRace", "npeOrcRace" ],
-      "impossible": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeKhajiitRace", "npeArgonianRace" ]
+      "best_fit": [ "NordRace" ],
+      "possible": [ "BretonRace", "ImperialRace" ],
+      "unlikely": [ "RedguardRace", "OrcRace" ],
+      "impossible": [ "HighElfRace", "WoodElfRace", "DarkElfRace", "KhajiitRace", "ArgonianRace" ]
     },
     "npeBladesFaction": {
-      "best_fit": [ "npeImperialRace", "npeNordRace" ],
-      "possible": [ "npeBretonRace", "npeRedguardRace" ],
-      "unlikely": [ "npeDunmerRace", "npeBosmerRace" ],
-      "impossible": [ "npeAltmerRace", "npeKhajiitRace", "npeArgonianRace", "npeOrcRace" ]
+      "best_fit": [ "ImperialRace", "NordRace" ],
+      "possible": [ "BretonRace", "RedguardRace" ],
+      "unlikely": [ "DarkElfRace", "WoodElfRace" ],
+      "impossible": [ "HighElfRace", "KhajiitRace", "ArgonianRace", "OrcRace" ]
     }
   }
 }

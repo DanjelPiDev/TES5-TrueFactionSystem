@@ -77,6 +77,7 @@ namespace NPE {
     }
 
     void InitRaceDisguiseBonus() {
+        // Load race-faction data from JSON if not already loaded
         if (factionRaceData.empty()) {
             LoadJsonData();
         }
@@ -87,40 +88,22 @@ namespace NPE {
             return;
         }
 
-        // Retrieve the 'npe' keyword from the player's race
-        std::string raceIdentifier;
-
-        RE::BGSKeywordForm *keywordForm = static_cast<RE::BGSKeywordForm *>(playerRace);
-        if (keywordForm) {
-            bool foundNpeKeyword = false;
-            for (uint32_t i = 0; i < keywordForm->numKeywords; i++) {
-                RE::BGSKeyword *keyword = keywordForm->keywords[i];
-                if (keyword) {
-                    std::string keywordEditorID = keyword->GetFormEditorID();
-                    if (keywordEditorID.rfind("npe", 0) == 0) {  // keyword starts with 'npe'
-                        raceIdentifier = keywordEditorID;
-                        foundNpeKeyword = true;
-                        break;
-                    }
-                }
-            }
-            if (!foundNpeKeyword) {
-                return;
-            }
-        } else {
+        std::string raceIdentifier = playerRace->GetFormEditorID();
+        if (raceIdentifier.empty()) {
+            spdlog::error("Player race does not have a valid EditorID.");
             return;
         }
 
-        // Loop through all factions to initialize the race bonus value
-        for (const auto &[tag, factionID] : factionArmorKeywords) {
+        for (const auto &[factionTag, factionID] : factionArmorKeywords) {
             RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
             if (!faction) {
                 continue;
             }
-
-            auto factionIt = factionRaceData.find(tag);
+            // Check if the faction exists in the race-faction JSON data
+            auto factionIt = factionRaceData.find(factionTag);
             if (factionIt != factionRaceData.end()) {
                 const auto &raceMap = factionIt->second;
+                // Check if the player's race exists in the faction's race list
                 auto raceIt = raceMap.find(raceIdentifier);
                 if (raceIt != raceMap.end()) {
                     int raceFactionBonus = raceIt->second;
