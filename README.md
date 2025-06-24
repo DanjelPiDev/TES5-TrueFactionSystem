@@ -1,6 +1,6 @@
 # True Faction System (TFS)
 
-> [![Download Latest Release](https://img.shields.io/github/v/release/Dagait/TES5-TrueFactionSystem)](https://github.com/Dagait/TES5-TrueFactionSystem/releases/latest)
+> [![Download Latest Release](https://img.shields.io/github/v/release/DanjelPiDev/TES5-TrueFactionSystem)](https://github.com/DanjelPiDev/TES5-TrueFactionSystem/releases/latest)
 
 <p align="center">
     <img src="https://github.com/user-attachments/assets/11b815a0-8bae-4a8a-8f2d-9a6bc0b2d119" width="400" />
