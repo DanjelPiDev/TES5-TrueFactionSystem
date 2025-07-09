@@ -94,11 +94,7 @@ namespace NPE {
         RE::TESObjectREFR *marker = markerPtr.get();
 
         marker->MoveTo(RE::PlayerCharacter::GetSingleton());
-
-        // Manually update position (Literally don't know how to do this)
-        // Still Wrong
-        // TODO: Somehow update the position of the marker, I'm currently to stupid to figure this out
-        marker->MoveTo(&lastKnownPos);
+        marker->SetPosition(lastKnownPos);
 
         npc->MoveTo(marker);
 
