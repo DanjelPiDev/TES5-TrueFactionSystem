@@ -45,13 +45,14 @@ namespace NPE {
     void PlayerDisguiseStatus::Clear() { factionDisguiseMap.clear(); }
 
     void PlayerDisguiseStatus::Save(SKSE::SerializationInterface* a_intfc) {
-        std::uint32_t size = factionDisguiseMap.size();
-        a_intfc->WriteRecord('PDST', 1, &size, sizeof(size));
-
-        for (const auto& [faction, data] : factionDisguiseMap) {
-            RE::FormID factionID = faction->GetFormID();
-            a_intfc->WriteRecordData(&factionID, sizeof(factionID));
-            a_intfc->WriteRecordData(&data.disguiseValue, sizeof(data.disguiseValue));
+        std::uint32_t count = static_cast<std::uint32_t>(factionDisguiseMap.size());
+        a_intfc->WriteRecordData(&count, sizeof(count));
+        for (auto& [faction, info] : factionDisguiseMap) {
+            RE::FormID id = faction->GetFormID();
+            a_intfc->WriteRecordData(&id, sizeof(id));
+            a_intfc->WriteRecordData(&info.disguiseValue, sizeof(info.disguiseValue));
+            a_intfc->WriteRecordData(&info.bonusValue, sizeof(info.bonusValue));
+            a_intfc->WriteRecordData(&info.raceDisguiseBonus, sizeof(info.raceDisguiseBonus));
         }
     }
 
@@ -61,26 +62,28 @@ namespace NPE {
     }
 
     void PlayerDisguiseStatus::Load(SKSE::SerializationInterface* a_intfc) {
-        std::uint32_t size;
-        if (!a_intfc->ReadRecordData(&size, sizeof(size))) {
+        std::uint32_t count;
+        if (!a_intfc->ReadRecordData(&count, sizeof(count))) {
+            spdlog::warn("PlayerDisguiseStatus::Load failed to read count");
             return;
         }
-
         factionDisguiseMap.clear();
-        for (std::uint32_t i = 0; i < size; ++i) {
-            RE::FormID factionID;
-            float disguiseValue;
-
-            if (!a_intfc->ReadRecordData(&factionID, sizeof(factionID))) {
+        for (std::uint32_t i = 0; i < count; ++i) {
+            RE::FormID id;
+            DisguiseData info;
+            if (!a_intfc->ReadRecordData(&id, sizeof(id)) ||
+                !a_intfc->ReadRecordData(&info.disguiseValue, sizeof(info.disguiseValue)) ||
+                !a_intfc->ReadRecordData(&info.bonusValue, sizeof(info.bonusValue)) ||
+                !a_intfc->ReadRecordData(&info.raceDisguiseBonus, sizeof(info.raceDisguiseBonus))) {
+                spdlog::warn("PlayerDisguiseStatus::Load incomplete data at index {}", i);
                 return;
             }
-            if (!a_intfc->ReadRecordData(&disguiseValue, sizeof(disguiseValue))) {
-                return;
-            }
-
-            RE::TESFaction* faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
-            if (faction) {
-                factionDisguiseMap[faction] = {faction, disguiseValue};
+            // Resolve faction pointer
+            if (RE::TESForm* form = RE::TESForm::LookupByID(id)) {
+                if (auto* faction = form->As<RE::TESFaction>()) {
+                    info.faction = faction;
+                    factionDisguiseMap[faction] = info;
+                }
             }
         }
     }

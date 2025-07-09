@@ -101,10 +101,10 @@ namespace NPE {
     }
 
     RE::BGSKeyword* GetKeywordByEditorID(RE::BSFixedString keywordEditorID) {
-        if (!g_dataHandler) {
-            g_dataHandler = RE::TESDataHandler::GetSingleton();
+        if (!dataHandler) {
+            dataHandler = RE::TESDataHandler::GetSingleton();
         }
-        const auto& allKeywords = g_dataHandler->GetFormArray<RE::BGSKeyword>();
+        const auto& allKeywords = dataHandler->GetFormArray<RE::BGSKeyword>();
 
         for (RE::BGSKeyword* keyword : allKeywords) {
             if (keyword && strcmp(keywordEditorID.c_str(), keyword->GetFormEditorID()) == 0) {

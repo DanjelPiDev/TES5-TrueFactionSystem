@@ -14,14 +14,14 @@ std::chrono::steady_clock::time_point lastRaceCheckTime;
 
 static NPE::HitEventHandler g_hitEventHandler;
 
-RE::TESDataHandler* g_dataHandler;
+RE::TESDataHandler* dataHandler;
 std::vector<RE::TESFaction*> g_allFactions;
 
 void StartBackgroundTask(Actor* player) {
-    NPE::g_backgroundTaskRunning.store(true);
+    NPE::backgroundTaskRunning.store(true);
 
-    NPE::g_backgroundTaskThread = std::make_unique<std::thread>([player]() {
-        while (NPE::g_backgroundTaskRunning.load()) {
+    NPE::backgroundTaskThread = std::make_unique<std::thread>([player]() {
+        while (NPE::backgroundTaskRunning.load()) {
             if (player && player->IsPlayerRef()) {
                 auto now = std::chrono::steady_clock::now();
                 auto elapsed = now - lastCheckTime;
@@ -51,9 +51,9 @@ void StartBackgroundTask(Actor* player) {
 }
 
 void StopBackgroundTask() {
-    NPE::g_backgroundTaskRunning.store(false);
-    if (NPE::g_backgroundTaskThread && NPE::g_backgroundTaskThread->joinable()) {
-        NPE::g_backgroundTaskThread->join();
+    NPE::backgroundTaskRunning.store(false);
+    if (NPE::backgroundTaskThread && NPE::backgroundTaskThread->joinable()) {
+        NPE::backgroundTaskThread->join();
     }
 }
 // Ensure StopBackgroundTask() runs when the DLL unloads (Like disabling the plugin by removing the dll, the task could still be in the memory?)
@@ -85,10 +85,10 @@ std::vector<RE::TESFaction *> ConvertBSTArrayToVector(const RE::BSTArray<RE::TES
 }
 
 void InitializeGlobalData() {
-    if (!g_dataHandler) {
-        g_dataHandler = RE::TESDataHandler::GetSingleton();
+    if (!dataHandler) {
+        dataHandler = RE::TESDataHandler::GetSingleton();
     }
-    const auto &bstFactions = g_dataHandler->GetFormArray<RE::TESFaction>();
+    const auto &bstFactions = dataHandler->GetFormArray<RE::TESFaction>();
     g_allFactions = ConvertBSTArrayToVector(bstFactions);
 }
 

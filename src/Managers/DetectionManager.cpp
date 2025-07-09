@@ -56,7 +56,7 @@ namespace NPE {
                                 this->StartCombat(npc, player, faction);
                                 recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
                                 // NPC detected the player
-                                std::lock_guard<std::mutex> lk(NPE::g_recognizedNPCsMutex);
+                                std::lock_guard<std::mutex> lk(NPE::recognizedNPCsMutex);
                                 recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
                                 return true;
                             }
@@ -182,7 +182,7 @@ namespace NPE {
         RE::FormID npcID = npc->GetFormID();
         float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
 
-        std::lock_guard<std::mutex> lk(NPE::g_recognizedNPCsMutex);
+        std::lock_guard<std::mutex> lk(NPE::recognizedNPCsMutex);
         auto it = recognizedNPCs.find(npcID);
 
         if (it != recognizedNPCs.end()) {
@@ -212,6 +212,34 @@ namespace NPE {
 
         if (npcFaction) {
             player->AddToFaction(npcFaction, -1);
+        }
+    }
+
+    void DetectionManager::SaveData(SKSE::SerializationInterface *a_intfc) {
+        std::uint32_t count = static_cast<std::uint32_t>(recognizedNPCs.size());
+        a_intfc->WriteRecordData(&count, sizeof(count));
+        // Write each NPC's FormID and detection struct
+        for (auto &[npcID, data] : recognizedNPCs) {
+            a_intfc->WriteRecordData(&npcID, sizeof(npcID));
+            a_intfc->WriteRecordData(&data, sizeof(data));
+        }
+    }
+
+    void DetectionManager::LoadData(SKSE::SerializationInterface *a_intfc) {
+        std::uint32_t count;
+        if (!a_intfc->ReadRecordData(&count, sizeof(count))) {
+            spdlog::warn("DetectionManager::LoadData failed to read count");
+            return;
+        }
+        recognizedNPCs.clear();
+        for (std::uint32_t i = 0; i < count; ++i) {
+            RE::FormID npcID;
+            NPCDetectionData data;
+            if (!a_intfc->ReadRecordData(&npcID, sizeof(npcID)) || !a_intfc->ReadRecordData(&data, sizeof(data))) {
+                spdlog::warn("DetectionManager::LoadData incomplete data at index {}", i);
+                return;
+            }
+            recognizedNPCs[npcID] = data;
         }
     }
 }

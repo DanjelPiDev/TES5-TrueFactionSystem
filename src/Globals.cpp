@@ -3,11 +3,9 @@
 
 
 namespace NPE {
-    std::atomic<bool> g_backgroundTaskRunning{false};
-    std::unique_ptr<std::thread> g_backgroundTaskThread;
-    std::mutex g_recognizedNPCsMutex;
-
-    DetectionManager& detectionManager = DetectionManager::GetInstance();
+    std::atomic<bool> backgroundTaskRunning{false};
+    std::unique_ptr<std::thread> backgroundTaskThread;
+    std::mutex recognizedNPCsMutex;
 
     DetectionManager& detectionManager = DetectionManager::GetInstance();
     DisguiseManager& disguiseManager = DisguiseManager::GetInstance();
@@ -53,7 +51,7 @@ namespace NPE {
     std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
     PlayerDisguiseStatus playerDisguiseStatus;
     std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
-    RE::TESDataHandler* g_dataHandler = RE::TESDataHandler::GetSingleton();
+    RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
 
     const std::vector<ArmorSlot> armorSlotsSlot = {
         {RE::BGSBipedObjectForm::BipedObjectSlot::kBody, CHEST_WEIGHT},

@@ -83,7 +83,8 @@ find_package(CommonLibSSE CONFIG REQUIRED)
 find_package(ryml CONFIG REQUIRED)
 find_path(ARTICUNO_INCLUDE_DIRS "articuno/articuno.h")
 
-add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${HEADERS} ${SOURCES})
+add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${SOURCES})
+target_sources(${PROJECT_NAME} PRIVATE ${HEADERS})
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 
 target_include_directories(${PROJECT_NAME}

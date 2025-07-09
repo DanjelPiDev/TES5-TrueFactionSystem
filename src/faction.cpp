@@ -102,7 +102,7 @@ namespace NPE {
 
         RE::TESFaction *silverHandFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x000AA0A4);
         if (silverHandFaction) {
-            factions.push_back({"SilverHandFaction", thalmorFaction});
+            factions.push_back({"SilverHandFaction", silverHandFaction});
         }
 
         for (const auto &[factionID, keyword] : assignedKeywordsMap) {

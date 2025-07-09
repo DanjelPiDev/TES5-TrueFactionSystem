@@ -16,11 +16,11 @@
 
 
 namespace NPE {
-    extern std::atomic<bool> g_backgroundTaskRunning;
-    extern std::unique_ptr<std::thread> g_backgroundTaskThread;
+    extern std::atomic<bool> backgroundTaskRunning;
+    extern std::unique_ptr<std::thread> backgroundTaskThread;
 
     // Protected by a mutex to ensure thread safety (especially for recognizedNPCs)
-    extern std::mutex g_recognizedNPCsMutex;
+    extern std::mutex recognizedNPCsMutex;
 
     class DetectionManager;
     class DisguiseManager;
@@ -41,7 +41,7 @@ namespace NPE {
     extern std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
     extern PlayerDisguiseStatus playerDisguiseStatus;
     extern std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
-    extern RE::TESDataHandler* g_dataHandler;
+    extern RE::TESDataHandler* dataHandler;
 
     extern std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
 
