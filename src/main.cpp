@@ -14,12 +14,14 @@ std::chrono::steady_clock::time_point lastRaceCheckTime;
 
 static NPE::HitEventHandler g_hitEventHandler;
 
-RE::TESDataHandler *g_dataHandler;
-std::vector<RE::TESFaction *> g_allFactions;
+RE::TESDataHandler* g_dataHandler;
+std::vector<RE::TESFaction*> g_allFactions;
 
-void StartBackgroundTask(Actor *player) {
-    std::thread([player]() {
-        while (true) {
+void StartBackgroundTask(Actor* player) {
+    NPE::g_backgroundTaskRunning.store(true);
+
+    NPE::g_backgroundTaskThread = std::make_unique<std::thread>([player]() {
+        while (NPE::g_backgroundTaskRunning.load()) {
             if (player && player->IsPlayerRef()) {
                 auto now = std::chrono::steady_clock::now();
                 auto elapsed = now - lastCheckTime;
@@ -45,9 +47,22 @@ void StartBackgroundTask(Actor *player) {
             }
             std::this_thread::sleep_for(NPE::CHECK_INTERVAL_SECONDS);
         }
-    }).detach();
+    });
 }
 
+void StopBackgroundTask() {
+    NPE::g_backgroundTaskRunning.store(false);
+    if (NPE::g_backgroundTaskThread && NPE::g_backgroundTaskThread->joinable()) {
+        NPE::g_backgroundTaskThread->join();
+    }
+}
+// Ensure StopBackgroundTask() runs when the DLL unloads (Like disabling the plugin by removing the dll, the task could still be in the memory?)
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
+    if (reason == DLL_PROCESS_DETACH) {
+        StopBackgroundTask();
+    }
+    return TRUE;
+}
 
 void SaveCallback(SKSE::SerializationInterface *a_intfc) {
     // SaveDetectionData(a_intfc);
@@ -102,8 +117,8 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
             InitializeLogging();
 
             spdlog::info("Loading in TFS...");
-
             spdlog::info("Loading in all Factions...");
+
             InitializeGlobalData();
 
             auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
@@ -118,10 +133,13 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
                 spdlog::info("HitEventHandler registered!");
             }
 
-            Actor *player = PlayerCharacter::GetSingleton();
+            Actor* player = PlayerCharacter::GetSingleton();
             if (player) {
                 lastCheckTime = std::chrono::steady_clock::now();
-                lastCheckDetectionTime = std::chrono::steady_clock::now();
+                lastUpdateDisguiseCheckTime = lastCheckTime;
+                lastCheckDetectionTime = lastCheckTime;
+                lastRaceCheckTime = lastCheckTime;
+
                 StartBackgroundTask(player);
             }
 

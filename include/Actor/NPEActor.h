@@ -6,6 +6,7 @@ namespace NPE {
     class NPEActor {
     public:
         explicit NPEActor(RE::Actor* a_actor);
+        RE::Actor* Get();
 
         void StartCombatWith(RE::Actor* target);
         bool IsHostileTo(RE::Actor* target);

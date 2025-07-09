@@ -4,10 +4,10 @@
 
 namespace NPE {
     NPEActor::NPEActor(RE::Actor* a_actor) : actor(a_actor) {
-        if (!actor) {
-            throw std::invalid_argument("Actor cannot be null");
-        }
+        if (!actor) throw std::invalid_argument("Actor cannot be null");
     }
+
+    RE::Actor* NPEActor::Get() { return actor; }
 
     NPCAlertness NPEActor::GetAlertness() const { return alertness; }
 

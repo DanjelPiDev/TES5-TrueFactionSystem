@@ -3,6 +3,12 @@
 
 
 namespace NPE {
+    std::atomic<bool> g_backgroundTaskRunning{false};
+    std::unique_ptr<std::thread> g_backgroundTaskThread;
+    std::mutex g_recognizedNPCsMutex;
+
+    DetectionManager& detectionManager = DetectionManager::GetInstance();
+
     DetectionManager& detectionManager = DetectionManager::GetInstance();
     DisguiseManager& disguiseManager = DisguiseManager::GetInstance();
     EnvironmentManager& environmentManager = EnvironmentManager::GetInstance();

@@ -55,7 +55,10 @@ namespace NPE {
                                 this->DetectCrimeWhileDisguised(npc, player)) {
                                 this->StartCombat(npc, player, faction);
                                 recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
-                                return true;  // NPC detected the player
+                                // NPC detected the player
+                                std::lock_guard<std::mutex> lk(NPE::g_recognizedNPCsMutex);
+                                recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
+                                return true;
                             }
                         }
                     }
@@ -179,13 +182,16 @@ namespace NPE {
         RE::FormID npcID = npc->GetFormID();
         float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
 
-        if (recognizedNPCs.find(npcID) != recognizedNPCs.end()) {
+        std::lock_guard<std::mutex> lk(NPE::g_recognizedNPCsMutex);
+        auto it = recognizedNPCs.find(npcID);
+
+        if (it != recognizedNPCs.end()) {
             NPCDetectionData &detectionData = recognizedNPCs[npcID];
 
-            float timeSinceLastDetected = currentInGameHours - detectionData.lastDetectedTime;
+            float elapsed = currentInGameHours - it->second.lastDetectedTime;
 
-            if (timeSinceLastDetected > TIME_TO_LOSE_DETECTION) {
-                recognizedNPCs.erase(npcID);
+            if (elapsed > TIME_TO_LOSE_DETECTION) {
+                recognizedNPCs.erase(it);
                 if (playerDisguiseStatus.GetDisguiseValue(faction) > 5.0f) {
                     player->AddToFaction(faction, 1);
                 }

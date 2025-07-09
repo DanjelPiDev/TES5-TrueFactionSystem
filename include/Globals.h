@@ -1,4 +1,9 @@
 #pragma once
+#include <atomic>
+#include <memory>
+#include <thread>
+#include <mutex>
+
 #include "Managers/NPCAlertnessManager.h"
 #include "Managers/DetectionManager.h"
 #include "Managers/DisguiseManager.h"
@@ -11,6 +16,12 @@
 
 
 namespace NPE {
+    extern std::atomic<bool> g_backgroundTaskRunning;
+    extern std::unique_ptr<std::thread> g_backgroundTaskThread;
+
+    // Protected by a mutex to ensure thread safety (especially for recognizedNPCs)
+    extern std::mutex g_recognizedNPCsMutex;
+
     class DetectionManager;
     class DisguiseManager;
     class EnvironmentManager;
