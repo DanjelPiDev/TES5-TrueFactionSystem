@@ -81,6 +81,31 @@ namespace NPE {
         }
     }
 
+    void DetectionManager::TriggerInvestigateLastKnownPosition(RE::Actor *npc, const RE::NiPoint3 &lastKnownPos) {
+        if (!npc || npc->IsDead() || npc->IsInCombat()) return;
+
+        static constexpr RE::FormID kXMarkerFormID = 0x0001F66E;
+        auto *markerBase = RE::TESForm::LookupByID<RE::TESBoundObject>(kXMarkerFormID);
+        if (!markerBase) return;
+
+        auto markerPtr = RE::PlayerCharacter::GetSingleton()->PlaceObjectAtMe(markerBase, false);
+        if (!markerPtr) return;
+
+        RE::TESObjectREFR *marker = markerPtr.get();
+
+        marker->MoveTo(RE::PlayerCharacter::GetSingleton());
+
+        // Manually update position (Literally don't know how to do this)
+        // Still Wrong
+        // TODO: Somehow update the position of the marker, I'm currently to stupid to figure this out
+        marker->MoveTo(&lastKnownPos);
+
+        npc->MoveTo(marker);
+
+        marker->Disable();
+        marker->IsMarkedForDeletion();
+    }
+
     bool DetectionManager::NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
         float playerDisguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
         float distance = abs(npc->GetPosition().GetDistance(player->GetPosition()));
@@ -89,15 +114,12 @@ namespace NPE {
             return false;
         }
 
-        // Calculate the base recognition probability based on disguise and distance
         float recognitionProbability = (DETECTION_RADIUS - distance) / DETECTION_RADIUS;
         recognitionProbability *= (100.0f - playerDisguiseValue) / 100.0f;
 
-        // Adjust by distance factor to scale probability
         float distanceFactor = 1.0f / (1.0f + std::exp((distance - DETECTION_RADIUS) * 0.1f));
         recognitionProbability *= distanceFactor;
 
-        // Level difference affects detection
         int npcLevel = npc->GetLevel();
         int playerLevel = player->GetLevel();
         int levelDifference = abs(npcLevel - playerLevel);
@@ -108,7 +130,6 @@ namespace NPE {
         // Add any environmental modifiers for detection (lighting, sneaking, etc.)
         recognitionProbability += environmentManager.GetEnvironmentalDetectionModifier(player);
 
-        // Retrieve previous detection time for this NPC
         RE::FormID npcID = npc->GetFormID();
         float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
 
@@ -118,9 +139,9 @@ namespace NPE {
             float timeSinceLastDetected = currentInGameHours - detectionData.lastDetectedTime;
 
             if (timeSinceLastDetected < TIME_TO_LOSE_DETECTION) {
-                recognitionProbability += 0.25f;  // NPC detected player recently, so boost detection chance
+                recognitionProbability += 0.25f;
             } else {
-                recognizedNPCs.erase(npcID);  // Forget if too much time has passed
+                recognizedNPCs.erase(npcID);
             }
         }
 

@@ -42,6 +42,8 @@ namespace NPE {
         void TriggerSuspiciousIdle(RE::Actor *npc);
         bool DetectCrimeWhileDisguised(RE::Actor *npc, RE::Actor *player);
 
+        void TriggerInvestigateLastKnownPosition(RE::Actor *npc, const RE::NiPoint3 &loc);
+
         void SaveData(SKSE::SerializationInterface *a_intfc);
         void LoadData(SKSE::SerializationInterface *a_intfc);
     private:

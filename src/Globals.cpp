@@ -63,4 +63,25 @@ namespace NPE {
         {RE::BGSBipedObjectForm::BipedObjectSlot::kHair, HAIR_WEIGHT}};
 
     std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
+
+    float ComputeSlotWeight(RE::BGSBipedObjectForm::BipedObjectSlot slot) {
+        float baseWeight = 0.0f;
+        for (const auto& si : armorSlotsSlot) {
+            if (si.slot == slot) {
+                baseWeight = si.weight;
+                break;
+            }
+        }
+
+        // Normalize the weight based on player level
+        // Higher level players have more effective disguises
+        RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+        float level = player ? static_cast<float>(player->GetLevel()) : 1.0f;
+        level = std::clamp(level, 1.0f, 100.0f);
+
+        float normalized = level / 100.0f;
+        float curveFactor = std::pow(normalized, 1.5f);
+
+        return baseWeight * (1.0f + curveFactor);
+    }
 }

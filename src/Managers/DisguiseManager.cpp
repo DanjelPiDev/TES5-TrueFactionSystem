@@ -4,7 +4,6 @@
 
 namespace NPE {
 
-
     void DisguiseManager::UpdateDisguiseValue(RE::Actor *actor) {
         constexpr const char *COVERED_FACE_TAG = "npeCoveredFace";
         std::unordered_map<RE::TESFaction *, float> factionDisguiseValues;
@@ -95,31 +94,19 @@ namespace NPE {
 
     void DisguiseManager::AddArmorSetBonus(RE::Actor *actor) {
         for (const auto &[factionTag, factionID] : factionArmorKeywords) {
-            int matchingArmorPieces = 0;
-            const int totalArmorSlots = 5;
+            RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
+            if (!faction) continue;
 
-            for (const auto &slot : armorSlotsSlot) {
-                RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
+            float bonus = 0.0f;
+            for (const auto &slotInfo : armorSlotsSlot) {
+                auto armor = actor->GetWornArmor(slotInfo.slot);
                 if (armor && armor->HasKeywordString(factionTag)) {
-                    matchingArmorPieces++;
+                    bonus += ComputeSlotWeight(slotInfo.slot);
                 }
             }
+            bonus = std::clamp(bonus, 0.0f, 100.0f);
 
-            float bonusAmount = 0.0f;
-
-            if (matchingArmorPieces >= 4) {
-                bonusAmount = 20.0f;
-            } else if (matchingArmorPieces >= 3) {
-                bonusAmount = 10.0f;
-            } else if (matchingArmorPieces >= 2) {
-                bonusAmount = 5.0f;
-            }
-
-            // If any bonus is applied, increase the actor's ArmorRating
-            if (bonusAmount > 0.0f) {
-                RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
-                playerDisguiseStatus.SetBonusValue(faction, bonusAmount);
-            }
+            playerDisguiseStatus.SetBonusValue(faction, bonus);
         }
     }
 }
