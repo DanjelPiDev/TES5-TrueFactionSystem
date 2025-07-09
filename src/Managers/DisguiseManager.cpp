@@ -64,6 +64,7 @@ namespace NPE {
                 actor->AddToFaction(faction, -1);
                 playerDisguiseStatus.RemoveDisguiseValue(faction);
             }
+
         }
 
         detectionManager.CheckNPCDetection(actor);

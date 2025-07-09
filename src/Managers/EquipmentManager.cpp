@@ -13,6 +13,8 @@ namespace NPE {
 
         if (actor && actor->IsPlayerRef()) {
             disguiseManager.UpdateDisguiseValue(actor);
+            detectionManager.CheckNPCDetection(actor);
+            InitRaceDisguiseBonus();
         }
 
         return RE::BSEventNotifyControl::kContinue;
