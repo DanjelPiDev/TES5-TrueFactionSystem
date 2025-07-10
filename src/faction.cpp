@@ -102,7 +102,7 @@ namespace NPE {
 
         RE::TESFaction *silverHandFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x000AA0A4);
         if (silverHandFaction) {
-            factions.push_back({"SilverHandFaction", thalmorFaction});
+            factions.push_back({"SilverHandFaction", silverHandFaction});
         }
 
         for (const auto &[factionID, keyword] : assignedKeywordsMap) {
@@ -131,7 +131,7 @@ namespace NPE {
     std::vector<RE::TESFaction *> GetFactionsByArmorTags(RE::Actor *actor) {
         std::set<RE::TESFaction *> factionsSet;
 
-        for (auto slot : armorSlotsSlot) {
+        for (auto slot : armorBipedSlots) {
             RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot.slot);
             if (wornArmor) {
                 for (const auto &[tag, factionID] : factionArmorKeywords) {
@@ -174,7 +174,7 @@ namespace NPE {
             return factions;
         }
 
-        for (RE::TESFaction *faction : g_allFactions) {
+        for (RE::TESFaction *faction : allFactions) {
             if (faction && actor->IsInFaction(faction)) {
                 factions.push_back(faction);
             }
@@ -186,7 +186,7 @@ namespace NPE {
     std::vector<RE::TESFaction *> GetAllFactions() {
         std::vector<RE::TESFaction *> factions;
 
-        for (RE::TESFaction *faction : g_allFactions) {
+        for (RE::TESFaction *faction : allFactions) {
             if (strcmp(faction->GetName(), "") != 0) {
                 factions.push_back(faction);
             }
@@ -196,24 +196,26 @@ namespace NPE {
     }
 
     RE::BSFixedString GetFactionEditorID(RE::TESFaction *faction) {
-        if (faction) {
-            const char *editorID = faction->GetFormEditorID();
+        if (!faction) return RE::BSFixedString("InvalidFaction");
 
-            // Check if editorID is valid
-            if (editorID && strlen(editorID) > 0) {
-                return RE::BSFixedString(editorID);
-            } else {
-                // Fallback: return the faction's form ID in hexadecimal as a string
-                char formIDBuffer[10];  // enough space for "0x" + 8 hex digits + null terminator
-                snprintf(formIDBuffer, sizeof(formIDBuffer), "0x%08X", faction->GetFormID());
-                auto factionName = factionFormIDToTagMap.find(faction->GetFormID());
-                if (factionName != factionFormIDToTagMap.end()) {
-                    return RE::BSFixedString(factionName->second);
-                }
-                return RE::BSFixedString(formIDBuffer);
-            }
+        auto it = factionEditorIDCache.find(faction->GetFormID());
+        if (it != factionEditorIDCache.end()) {
+            return it->second;
         }
-        return RE::BSFixedString("No FactionID found!");
+
+        // Not in cache (should not happen unless late-loaded)
+        const char *editorID = faction->GetFormEditorID();
+        if (editorID && strlen(editorID) > 0) {
+            auto value = RE::BSFixedString(editorID);
+            factionEditorIDCache[faction->GetFormID()] = value;
+            return value;
+        }
+
+        char fallback[32];
+        snprintf(fallback, sizeof(fallback), "0x%08X", faction->GetFormID());
+        auto value = RE::BSFixedString(fallback);
+        factionEditorIDCache[faction->GetFormID()] = value;
+        return value;
     }
 
     RE::TESFaction *GetFactionByEditorID(RE::BSFixedString factionEditorID) {
@@ -221,7 +223,7 @@ namespace NPE {
             return nullptr;
         }
 
-        for (RE::TESFaction *faction : g_allFactions) {
+        for (RE::TESFaction *faction : allFactions) {
             if (faction && strcmp(factionEditorID.c_str(), faction->GetFormEditorID()) == 0) {
                 return faction;
             }

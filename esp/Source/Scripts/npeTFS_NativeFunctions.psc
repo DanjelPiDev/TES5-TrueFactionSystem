@@ -14,3 +14,15 @@ Keyword Function HandleAddFactionFromMCM(Faction akFaction) global Native
 string[] Function GetAssignedKeywords() global Native
 Faction[] Function GetAssignedFactions() global Native
 Bool Function RemoveFactionKeywordAssignment(string akKeyword, Faction faction) global Native
+float Function GetTimeToLoseDetection() global Native
+Function SetTimeToLoseDetection(float akValue) global Native
+float Function GetDetectionThreshold() global Native
+Function SetDetectionThreshold(float akValue) global Native
+float Function GetDetectionRadius() global Native
+Function SetDetectionRadius(float akValue) global Native
+bool Function GetUseFOVCheck() global Native
+Function SetUseFOVCheck(bool akValue) global Native
+bool Function GetUseLineOfSightCheck() global Native
+Function SetUseLineOfSightCheck(bool akValue) global Native
+float Function GetFOVAngle() global Native
+Function SetFOVAngle(float akValue) global Native

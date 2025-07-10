@@ -1,5 +1,9 @@
+#include <filesystem>
+#include <fstream>
+
 #include "Race.h"
 #include "Globals.h"
+
 // Get nlohmann/json from: https://github.com/nlohmann/json
 #include "nlohmann/json.hpp"
 
@@ -11,44 +15,71 @@ namespace NPE {
     const std::string raceFactionFilePath = "tfs_definitions/race_faction.json";
 
     void LoadJsonData() {
-        std::string dllPath = GetCurrentDLLPath();
-        dllPath = dllPath.substr(0, dllPath.find_last_of("\\/")) + "\\";
+        std::filesystem::path dllPath = GetCurrentDLLPath();
+        dllPath = dllPath.parent_path();
 
-        std::ifstream raceFactionFile(dllPath + raceFactionFilePath);
+        std::filesystem::path filePath = dllPath / "tfs_definitions" / "race_faction.json";
 
+        if (!std::filesystem::exists(filePath)) {
+            spdlog::error("JSON file '{}' does not exist", filePath.string());
+            return;
+        }
+
+        std::ifstream raceFactionFile(filePath);
         if (!raceFactionFile.is_open()) {
-            spdlog::error("Failed to open one of the JSON files.");
+            spdlog::error("Failed to open JSON file '{}'", filePath.string());
             return;
         }
 
         nlohmann::json raceFactionJson;
-
-        raceFactionFile >> raceFactionJson;
-
-        // Parse the race-faction correlation data
-        for (auto &[faction, raceList] : raceFactionJson["factions"].items()) {
-            std::unordered_map<std::string, int> raceMap;
-            for (auto &[fitType, races] : raceList.items()) {
-                int value = 0;
-
-                if (fitType == "best_fit")
-                    value = 20;
-                else if (fitType == "possible")
-                    value = 10;
-                else if (fitType == "unlikely")
-                    value = 0;
-                else if (fitType == "impossible")
-                    value = -80;
-
-                for (auto &race : races) {
-                    raceMap[race] = value;
-                }
-            }
-            factionRaceData[faction] = raceMap;
+        try {
+            raceFactionFile >> raceFactionJson;
+        } catch (const nlohmann::json::parse_error &e) {
+            spdlog::error("Failed to parse JSON '{}': {}", filePath.string(), e.what());
+            return;
         }
 
-        spdlog::info("Read in JSON data.");
-        spdlog::info("factionRaceData size: {}", factionRaceData.size());
+        if (!raceFactionJson.contains("factions") || !raceFactionJson["factions"].is_object()) {
+            spdlog::error("JSON '{}' missing or invalid 'factions' object", filePath.string());
+            return;
+        }
+
+        // Expected categories
+        const std::array<std::string, 4> categories = {"best_fit", "possible", "unlikely", "impossible"};
+        for (auto &[factionTag, raceList] : raceFactionJson["factions"].items()) {
+            if (!raceList.is_object()) {
+                spdlog::warn("Skipping faction '{}': entry is not an object", factionTag);
+                continue;
+            }
+
+            std::unordered_map<std::string, int> raceMap;
+            for (auto &category : categories) {
+                if (!raceList.contains(category) || !raceList[category].is_array()) {
+                    spdlog::warn("Faction '{}' missing or invalid '{}' array", factionTag, category);
+                    continue;
+                }
+                int value = 0;
+                if (category == "best_fit")
+                    value = 20;
+                else if (category == "possible")
+                    value = 10;
+                else if (category == "unlikely")
+                    value = 0;
+                else if (category == "impossible")
+                    value = -80;
+
+                for (auto &race : raceList[category]) {
+                    if (!race.is_string()) {
+                        spdlog::warn("Skipping non-string race in faction '{}', category '{}'", factionTag, category);
+                        continue;
+                    }
+                    raceMap[race.get<std::string>()] = value;
+                }
+            }
+            factionRaceData[factionTag] = std::move(raceMap);
+        }
+
+        spdlog::info("Loaded JSON data from '{}' ({} factions)", filePath.string(), factionRaceData.size());
     }
 
     int RaceValueForFaction(const std::string &race, const std::string &faction) {

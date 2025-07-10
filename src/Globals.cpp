@@ -3,6 +3,20 @@
 
 
 namespace NPE {
+    float TIME_TO_LOSE_DETECTION = 2.0f;
+    float DETECTION_THRESHOLD = 0.61f;
+    float DETECTION_RADIUS = 400.0f;
+    float FOV_ANGLE = 120.0f;
+    bool USE_FOV_CHECK = true;
+    bool USE_LINE_OF_SIGHT_CHECK = true;
+
+    std::atomic<bool> backgroundTaskRunning{false};
+    std::unique_ptr<std::thread> backgroundTaskThread;
+    std::mutex recognizedNPCsMutex;
+
+    std::vector<RE::TESFaction*> filteredFactions;
+    std::unordered_map<RE::FormID, RE::BSFixedString> factionEditorIDCache;
+
     DetectionManager& detectionManager = DetectionManager::GetInstance();
     DisguiseManager& disguiseManager = DisguiseManager::GetInstance();
     EnvironmentManager& environmentManager = EnvironmentManager::GetInstance();
@@ -47,9 +61,9 @@ namespace NPE {
     std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
     PlayerDisguiseStatus playerDisguiseStatus;
     std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
-    RE::TESDataHandler* g_dataHandler = RE::TESDataHandler::GetSingleton();
+    RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
 
-    const std::vector<ArmorSlot> armorSlotsSlot = {
+    const std::vector<ArmorSlot> armorBipedSlots = {
         {RE::BGSBipedObjectForm::BipedObjectSlot::kBody, CHEST_WEIGHT},
         {RE::BGSBipedObjectForm::BipedObjectSlot::kHands, GLOVES_WEIGHT},
         {RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, FOREARMS_WEIGHT},
@@ -59,4 +73,43 @@ namespace NPE {
         {RE::BGSBipedObjectForm::BipedObjectSlot::kHair, HAIR_WEIGHT}};
 
     std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
+
+    float ComputeSlotWeight(RE::BGSBipedObjectForm::BipedObjectSlot slot) {
+        float baseWeight = 0.0f;
+        for (const auto& si : armorBipedSlots) {
+            if (si.slot == slot) {
+                baseWeight = si.weight;
+                break;
+            }
+        }
+
+        // Normalize the weight based on player level
+        // Higher level players have more effective disguises
+        RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+        float level = player ? static_cast<float>(player->GetLevel()) : 1.0f;
+        level = std::clamp(level, 1.0f, 100.0f);
+
+        float normalized = level / 100.0f;
+        float curveFactor = std::pow(normalized, 1.5f);
+
+        return baseWeight * (1.0f + curveFactor);
+    }
+
+    float GetTimeToLoseDetection() { return TIME_TO_LOSE_DETECTION; }
+    void SetTimeToLoseDetection(float v) { TIME_TO_LOSE_DETECTION = v; }
+
+    float GetDetectionThreshold() { return DETECTION_THRESHOLD; }
+    void SetDetectionThreshold(float v) { DETECTION_THRESHOLD = v; }
+
+    float GetDetectionRadius() { return DETECTION_RADIUS; }
+    void SetDetectionRadius(float v) { DETECTION_RADIUS = v; }
+
+    bool GetUseFOVCheck() { return USE_FOV_CHECK; }
+    void SetUseFOVCheck(bool v) { USE_FOV_CHECK = v; }
+
+    bool GetUseLineOfSightCheck() { return USE_LINE_OF_SIGHT_CHECK; }
+    void SetUseLineOfSightCheck(bool v) { USE_LINE_OF_SIGHT_CHECK = v; }
+
+    float GetFOVAngle() { return FOV_ANGLE; }
+    void SetFOVAngle(float v) { FOV_ANGLE = v; }
 }

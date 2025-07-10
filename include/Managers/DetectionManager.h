@@ -40,7 +40,12 @@ namespace NPE {
         void CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction);
         void StartCombat(RE::Actor *npc, RE::Actor *player, RE::TESFaction *npcFaction);
         void TriggerSuspiciousIdle(RE::Actor *npc);
-        bool DetectCrimeWhileDisguised(RE::Actor *npc, RE::Actor *player); 
+        bool DetectCrimeWhileDisguised(RE::Actor *npc, RE::Actor *player);
+
+        void TriggerInvestigateLastKnownPosition(RE::Actor *npc, const RE::NiPoint3 &loc);
+
+        void Save(SKSE::SerializationInterface *a_intfc);
+        void Load(SKSE::SerializationInterface *a_intfc);
     private:
         DetectionManager() = default;
         /**

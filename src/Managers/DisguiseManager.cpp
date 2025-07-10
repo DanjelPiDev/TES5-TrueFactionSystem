@@ -4,37 +4,37 @@
 
 namespace NPE {
 
-
     void DisguiseManager::UpdateDisguiseValue(RE::Actor *actor) {
         constexpr const char *COVERED_FACE_TAG = "npeCoveredFace";
         std::unordered_map<RE::TESFaction *, float> factionDisguiseValues;
 
         // Gather the factions by armor tags
         std::vector<RE::TESFaction *> factions = GetFactionsByArmorTags(actor);
+        for (auto &possible : allFactions) {
+            if (actor->IsInFaction(possible) && !factionDisguiseValues.count(possible)) {
+                factionDisguiseValues[possible] = 0.0f;
+            }
+        }
+
         if (factions.empty()) {
             playerDisguiseStatus.Clear();
             RemovePlayerFromAllFactions(actor);
+            detectionManager.CheckNPCDetection(actor);
             return;
         }
 
         this->ClearArmorDisguiseValues(actor);
 
         // Iterate through armor slots and calculate values per faction
-        for (const auto &slot : armorSlotsSlot) {
+        for (const auto &slot : armorBipedSlots) {
             RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
-            if (!armor) {
-                continue;
-            }
+            if (!armor) continue;
 
             for (RE::TESFaction *faction : factions) {
-                if (!faction) {
-                    continue;
-                }
+                if (!faction) continue;
 
                 std::string factionTag = GetTagForFaction(faction);
-                if (factionTag.empty()) {
-                    continue;
-                }
+                if (factionTag.empty()) continue;
 
                 // Check if the armor has a keyword for the faction
                 if (armor->HasKeywordString(factionTag)) {
@@ -58,6 +58,8 @@ namespace NPE {
 
             playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
 
+            std::string factionTag = GetTagForFaction(faction);
+
             // Add or remove the actor from factions based on disguise value
             if (!actor->IsInFaction(faction) && disguiseValue > ADD_TO_FACTION_THRESHOLD) {
                 actor->AddToFaction(faction, 1);
@@ -65,6 +67,7 @@ namespace NPE {
                 actor->AddToFaction(faction, -1);
                 playerDisguiseStatus.RemoveDisguiseValue(faction);
             }
+
         }
 
         detectionManager.CheckNPCDetection(actor);
@@ -95,31 +98,19 @@ namespace NPE {
 
     void DisguiseManager::AddArmorSetBonus(RE::Actor *actor) {
         for (const auto &[factionTag, factionID] : factionArmorKeywords) {
-            int matchingArmorPieces = 0;
-            const int totalArmorSlots = 5;
+            RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
+            if (!faction) continue;
 
-            for (const auto &slot : armorSlotsSlot) {
-                RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
+            float bonus = 0.0f;
+            for (const auto &slotInfo : armorBipedSlots) {
+                auto armor = actor->GetWornArmor(slotInfo.slot);
                 if (armor && armor->HasKeywordString(factionTag)) {
-                    matchingArmorPieces++;
+                    bonus += ComputeSlotWeight(slotInfo.slot);
                 }
             }
+            bonus = std::clamp(bonus, 0.0f, 100.0f);
 
-            float bonusAmount = 0.0f;
-
-            if (matchingArmorPieces >= 4) {
-                bonusAmount = 20.0f;
-            } else if (matchingArmorPieces >= 3) {
-                bonusAmount = 10.0f;
-            } else if (matchingArmorPieces >= 2) {
-                bonusAmount = 5.0f;
-            }
-
-            // If any bonus is applied, increase the actor's ArmorRating
-            if (bonusAmount > 0.0f) {
-                RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
-                playerDisguiseStatus.SetBonusValue(faction, bonusAmount);
-            }
+            playerDisguiseStatus.SetBonusValue(faction, bonus);
         }
     }
 }

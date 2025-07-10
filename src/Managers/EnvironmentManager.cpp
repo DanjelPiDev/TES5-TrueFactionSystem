@@ -2,66 +2,24 @@
 #include "Globals.h"
 
 
-
-
 namespace NPE {
-    bool EnvironmentManager::IsPlayerInDarkArea(RE::Actor *player) {
-        RE::TESObjectCELL *cell = player->GetParentCell();
-        if (!cell) {
-            return false;
-        }
-
-        if (cell->IsInteriorCell()) {
-            RE::INTERIOR_DATA *lightingData = cell->GetLighting();
-            float lightingLevel = lightingData->ambient.red + lightingData->ambient.green + lightingData->ambient.blue;
-
-            return lightingLevel < 150.0f;
-        } else {
-            // If exterior, check the current weather and light levels from the Sky singleton
-            RE::Sky *sky = RE::Sky::GetSingleton();
-            if (!sky) {
-                return false;
-            }
-
-            RE::TESWeather *currentWeather = sky->currentWeather;
-            if (IsBadWeather(currentWeather)) {
-                return true;
-            }
-
-            if (!IsPlayerNearLightSource(player, 50.0f)) {
-                return true;
-            }
-
-            float currentTime = sky->currentGameHour;
-            if (IsNightTime()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    bool EnvironmentManager::IsPlayerInDarkArea(RE::Actor *player) { return GetPlayerDarknessFactor(player) > 0.5f; }
 
     bool EnvironmentManager::IsPlayerNearLightSource(RE::Actor *player, float radius) {
-        if (!player) {
-            return false;
-        }
+        if (!player) return false;
+        auto *cell = player->GetParentCell();
+        if (!cell) return false;
+        RE::NiPoint3 pos = player->GetPosition();
 
-        RE::TESObjectCELL *cell = player->GetParentCell();
-        if (!cell) {
-            return false;
-        }
-
-        RE::NiPoint3 playerPos = player->GetPosition();
-
-        cell->ForEachReferenceInRange(playerPos, radius, [&](RE::TESObjectREFR &ref) -> RE::BSContainer::ForEachResult {
-            RE::TESObjectLIGH *lightSource = ref.As<RE::TESObjectLIGH>();
-            if (lightSource && lightSource->data.radius > 0) {
+        bool found = false;
+        cell->ForEachReferenceInRange(pos, radius, [&](RE::TESObjectREFR &ref) {
+            if (ref.As<RE::TESObjectLIGH>() && ref.As<RE::TESObjectLIGH>()->data.radius > 0) {
+                found = true;
                 return RE::BSContainer::ForEachResult::kStop;
             }
             return RE::BSContainer::ForEachResult::kContinue;
         });
-
-        return false;
+        return found;
     }
 
     bool EnvironmentManager::IsInLineOfSight(RE::Actor *npc, RE::Actor *player) {
@@ -69,22 +27,23 @@ namespace NPE {
             return false;
         }
 
-        bool hasLineOfSight = false;
-        bool isDetected = npc->HasLineOfSight(player->AsReference(), hasLineOfSight);
-        if (isDetected) {
-            spdlog::debug("NPC has line of sight to player");
+        RE::NiPoint3 npcPos = npc->GetPosition();
+        RE::NiPoint3 playerPos = player->GetPosition();
+        float distance = npcPos.GetDistance(playerPos);
+        if (distance > DETECTION_RADIUS) {
+            return false;
         }
-        return isDetected;
+
+        bool hasLineOfSight = false;
+        npc->HasLineOfSight(player->AsReference(), hasLineOfSight);
+        return hasLineOfSight;
     }
 
     bool EnvironmentManager::IsNightTime() {
         RE::Sky *sky = RE::Sky::GetSingleton();
-        if (!sky) {
-            return false;
-        }
-
+        if (!sky) return false;
         float currentTime = sky->currentGameHour;
-        return currentTime < 6.0f || currentTime > 18.0f;
+        return (currentTime < 6.0f) || (currentTime > 18.0f);
     }
 
     bool EnvironmentManager::IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees) {
@@ -92,36 +51,46 @@ namespace NPE {
             return false;
         }
 
-        float distance = npc->GetPosition().GetDistance(player->GetPosition());
+        RE::NiPoint3 npcPos = npc->GetPosition();
+        RE::NiPoint3 playerPos = player->GetPosition();
+        RE::NiPoint3 dir = playerPos - npcPos;
+        
+        float distance = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
         if (distance > DETECTION_RADIUS) {
             return false;
         }
-
-        // Get the NPC's rotation in radians
-        float npcRotationZ = npc->data.angle.z;
-        RE::NiPoint3 npcForward(std::cos(npcRotationZ), std::sin(npcRotationZ), 0.0f);
-
-        RE::NiPoint3 npcToPlayer = player->GetPosition() - npc->GetPosition();
-        float length = npcToPlayer.Length();
-        if (length > 0.0f) {
-            npcToPlayer /= length;
+        if (distance < 1e-4f) {
+            return true;
         }
 
-        float dotProduct = npcForward.Dot(npcToPlayer);
-        dotProduct = std::clamp(dotProduct, -1.0f, 1.0f);
+        dir.x /= distance;
+        dir.y /= distance;
+        dir.z /= distance;
 
-        // Field of view factor (cosine of half of the FOV in radians)
-        float fovCosine = std::cos((fieldOfViewDegrees / 2.0f) * (M_PI / 180.0f));
+        // NPC-Orientation (Pitch = X, Yaw = Z)
+        float pitch = npc->GetAngleX();
+        float yaw = npc->GetAngleZ();
 
-        return dotProduct >= fovCosine;
+        RE::NiPoint3 forward;
+        forward.x = std::cosf(pitch) * std::cosf(yaw);
+        forward.y = std::cosf(pitch) * std::sinf(yaw);
+        forward.z = std::sinf(pitch);
+
+        float dot = forward.x * dir.x + forward.y * dir.y + forward.z * dir.z;
+
+        float halfFovRad = 0.5f * fieldOfViewDegrees * (M_PI / 180.0f);
+        float minDot = std::cosf(halfFovRad);
+
+        return dot >= minDot;
     }
 
-    bool EnvironmentManager::IsBadWeather(RE::TESWeather *currentWeather) {
+
+    bool EnvironmentManager::IsBadWeather(RE::TESWeather *weather) {
         // Check if the weather is rainy, foggy, or cloudy (bad for visibility)
-        if (currentWeather) {
-            if (currentWeather->data.flags & RE::TESWeather::WeatherDataFlag::kRainy ||
-                currentWeather->data.flags & RE::TESWeather::WeatherDataFlag::kCloudy ||
-                currentWeather->data.flags & RE::TESWeather::WeatherDataFlag::kSnow) {
+        if (weather) {
+            if (weather->data.flags & RE::TESWeather::WeatherDataFlag::kRainy ||
+                weather->data.flags & RE::TESWeather::WeatherDataFlag::kCloudy ||
+                weather->data.flags & RE::TESWeather::WeatherDataFlag::kSnow) {
                 return true;
             }
         }
@@ -160,6 +129,46 @@ namespace NPE {
             return 1.5f;  // Increase detection near light sources
         }
         return 1.0f;
+    }
+
+    float EnvironmentManager::GetPlayerDarknessFactor(RE::Actor *player) {
+        if (!player) {
+            return 0.0f;  // safety: fully lit
+        }
+
+        auto *cell = player->GetParentCell();
+        if (cell && cell->IsInteriorCell()) {
+            // Interior lighting: sum RGB ambient and map to [0...1]
+            auto *lighting = cell->GetLighting();
+            float totalAmbient = lighting->ambient.red + lighting->ambient.green + lighting->ambient.blue;
+            float norm = std::clamp(totalAmbient / 300.0f, 0.0f, 1.0f);
+
+            return 1.0f - norm;  // 0 = bright, 1 = very dark
+        }
+
+        float factor = 0.0f;
+        auto *sky = RE::Sky::GetSingleton();
+        float hour = sky ? sky->currentGameHour : 12.0f;
+
+        // map [6h...18h]->0, [0...6] and [18...24]->1, with linear fades
+        if (hour < 6.0f) {
+            factor = 1.0f;
+        } else if (hour < 12.0f) {
+            factor = 1.0f - (hour - 6.0f) / 6.0f;
+        } else if (hour < 18.0f) {
+            factor = (hour - 12.0f) / 6.0f;
+        } else {
+            factor = 1.0f;
+        }
+
+        if (IsBadWeather(sky ? sky->currentWeather : nullptr)) {
+            factor = std::min(1.0f, factor + 0.3f);
+        }
+        if (IsPlayerNearLightSource(player, 50.0f)) {
+            factor = std::max(0.0f, factor - 0.5f);
+        }
+
+        return std::clamp(factor, 0.0f, 1.0f);
     }
 
 }

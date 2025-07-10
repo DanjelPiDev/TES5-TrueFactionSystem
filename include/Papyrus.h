@@ -91,4 +91,28 @@ namespace NPE {
     std::vector<RE::TESFaction*> PapyrusGetAllFactions(RE::StaticFunctionTag*);
 
     RE::BGSKeyword* PapyrusHandleAddFactionFromMCM(RE::StaticFunctionTag*, RE::TESFaction* faction);
+
+    float PapyrusGetTimeToLoseDetection(RE::StaticFunctionTag*);
+
+    void PapyrusSetTimeToLoseDetection(RE::StaticFunctionTag*, float time);
+
+    float PapyrusGetDetectionThreshold(RE::StaticFunctionTag*);
+
+    void PapyrusSetDetectionThreshold(RE::StaticFunctionTag*, float threshold);
+
+    float PapyrusGetDetectionRadius(RE::StaticFunctionTag*);
+
+    void PapyrusSetDetectionRadius(RE::StaticFunctionTag*, float radius);
+
+    bool PapyrusGetUseFOVCheck(RE::StaticFunctionTag*);
+
+    void PapyrusSetUseFOVCheck(RE::StaticFunctionTag*, bool useFOVCheck);
+
+    bool PapyrusGetUseLineOfSightCheck(RE::StaticFunctionTag*);
+
+    void PapyrusSetUseLineOfSightCheck(RE::StaticFunctionTag*, bool useLineOfSightCheck);
+
+    void PapyrusSetFOVAngle(RE::StaticFunctionTag*, float angle);
+
+    float PapyrusGetFOVAngle(RE::StaticFunctionTag*);
 }

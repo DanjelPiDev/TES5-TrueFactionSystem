@@ -1,5 +1,6 @@
 #include "ArmorSlots.h"
 #include "Globals.h"
+#include <memory>
 
 
 namespace NPE {
@@ -25,7 +26,8 @@ namespace NPE {
 
         // Expand the keyword array and add the new keyword
         uint32_t newNumKeywords = keywordForm->numKeywords + 1;
-        RE::BGSKeyword** newKeywords = new RE::BGSKeyword*[newNumKeywords];
+        // For the memory management (Because the MCM menu is really slow)
+        auto newKeywords = std::make_unique<RE::BGSKeyword*[]>(newNumKeywords);
 
         // Copy over existing keywords
         for (uint32_t i = 0; i < keywordForm->numKeywords; i++) {
@@ -34,7 +36,11 @@ namespace NPE {
 
         newKeywords[newNumKeywords - 1] = keyword;
 
-        keywordForm->keywords = newKeywords;
+        if (keywordForm->keywords) {
+            delete[] keywordForm->keywords;
+        }
+
+        keywordForm->keywords = newKeywords.release();
         keywordForm->numKeywords = newNumKeywords;
 
         return true;
@@ -69,13 +75,15 @@ namespace NPE {
 
         // If there's only one keyword, just clear the array
         if (keywordForm->numKeywords == 1) {
+            delete[] keywordForm->keywords;
             keywordForm->keywords = nullptr;
             keywordForm->numKeywords = 0;
             return true;
         }
 
         uint32_t newNumKeywords = keywordForm->numKeywords - 1;
-        RE::BGSKeyword** newKeywords = new RE::BGSKeyword*[newNumKeywords];
+        // Same as above, for the memory management
+        auto newKeywords = std::make_unique<RE::BGSKeyword*[]>(newNumKeywords);
 
         // Copy over the keywords except for the one to remove
         for (uint32_t i = 0, j = 0; i < keywordForm->numKeywords; i++) {
@@ -84,17 +92,19 @@ namespace NPE {
             }
         }
 
-        keywordForm->keywords = newKeywords;
+        delete[] keywordForm->keywords;
+
+        keywordForm->keywords = newKeywords.release();
         keywordForm->numKeywords = newNumKeywords;
 
         return true;
     }
 
     RE::BGSKeyword* GetKeywordByEditorID(RE::BSFixedString keywordEditorID) {
-        if (!g_dataHandler) {
-            g_dataHandler = RE::TESDataHandler::GetSingleton();
+        if (!dataHandler) {
+            dataHandler = RE::TESDataHandler::GetSingleton();
         }
-        const auto& allKeywords = g_dataHandler->GetFormArray<RE::BGSKeyword>();
+        const auto& allKeywords = dataHandler->GetFormArray<RE::BGSKeyword>();
 
         for (RE::BGSKeyword* keyword : allKeywords) {
             if (keyword && strcmp(keywordEditorID.c_str(), keyword->GetFormEditorID()) == 0) {
