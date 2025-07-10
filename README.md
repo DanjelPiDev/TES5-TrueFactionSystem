@@ -150,11 +150,11 @@ $$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 
 ### Planned Features:
 
-[ ] **Quest integration**: Possible integration into existing quests to adjust NPC behavior based on the player’s disguise.
-[ ] **Mod support**: Support for custom faction armors and factions from mods (MCM) (Partially implemented, looking for a smarter way in doing this).
-[x] **Configurable settings**: Allow players to customize settings such as check intervals, stealth thresholds, and more.
-[x] **Location-Based NPC Memory**: NPCs will have the ability to remember the player's appearance based on the location. If the player is recognized in a certain area, the disguise may not work when they return to that location, making it harder to fool the same NPCs again. Currently, the NPC's FormID is stored for 2 hours of in-game time, during which time there is a higher probability that the NPC will be able to detect the player's disguise again.
-[x] **Race-Based Disguise**: Certain races will receive bonuses or penalties when wearing faction armors. For example, High Elves (Altmer) may have an easier time disguising as Thalmor agents, while Orcs or Nords may find it more difficult to pass unnoticed in Imperial factions. This adds an additional layer of immersion and strategy, as the player's race will influence how effectively they can blend in with different factions.
+- [ ] **Quest integration**: Possible integration into existing quests to adjust NPC behavior based on the player’s disguise.
+- [ ] **Mod support**: Support for custom faction armors and factions from mods (MCM) (Partially implemented, looking for a smarter way in doing this).
+- [x] **Configurable settings**: Allow players to customize settings such as check intervals, stealth thresholds, and more.
+- [x] **Location-Based NPC Memory**: NPCs will have the ability to remember the player's appearance based on the location. If the player is recognized in a certain area, the disguise may not work when they return to that location, making it harder to fool the same NPCs again. Currently, the NPC's FormID is stored for 2 hours of in-game time, during which time there is a higher probability that the NPC will be able to detect the player's disguise again.
+- [x] **Race-Based Disguise**: Certain races will receive bonuses or penalties when wearing faction armors. For example, High Elves (Altmer) may have an easier time disguising as Thalmor agents, while Orcs or Nords may find it more difficult to pass unnoticed in Imperial factions. This adds an additional layer of immersion and strategy, as the player's race will influence how effectively they can blend in with different factions.
 
 ## Known Issues
 
