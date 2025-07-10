@@ -47,28 +47,24 @@ namespace NPE {
             return false;
         }
 
-        float distance = npc->GetPosition().GetDistance(player->GetPosition());
+        RE::NiPoint3 npcPos = npc->GetPosition();
+        RE::NiPoint3 playerPos = player->GetPosition();
+        RE::NiPoint3 toPlayer = playerPos - npcPos;
+        float distance = toPlayer.Unitize();
         if (distance > DETECTION_RADIUS) {
             return false;
         }
 
-        // Get the NPC's rotation in radians
-        float npcRotationZ = npc->data.angle.z * (M_PI / 180.0f);
-        RE::NiPoint3 npcForward(std::cos(npcRotationZ), std::sin(npcRotationZ), 0.0f);
+        // 2) Vorwärts­richtung des NPC (yaw bereits in Radians)
+        float yaw = npc->data.angle.z;  // direkt verwenden!
+        RE::NiPoint3 forward{std::cosf(yaw), std::sinf(yaw), 0.0f};
 
-        RE::NiPoint3 npcToPlayer = player->GetPosition() - npc->GetPosition();
-        float length = npcToPlayer.Length();
-        if (length > 0.0f) {
-            npcToPlayer /= length;
-        }
+        // 3) Dot-Product und FOV-Schwelle
+        float dot = forward.Dot(toPlayer);  // cos(Abweichung)
+        float halfFovRad = (fieldOfViewDegrees * 0.5f) * (M_PI / 180.0f);
+        float minDot = std::cosf(halfFovRad);
 
-        float dotProduct = npcForward.Dot(npcToPlayer);
-        dotProduct = std::clamp(dotProduct, -1.0f, 1.0f);
-
-        // Field of view factor (cosine of half of the FOV in radians)
-        float fovCosine = std::cos((fieldOfViewDegrees / 2.0f) * (M_PI / 180.0f));
-
-        return dotProduct >= fovCosine;
+        return dot >= minDot;
     }
 
     bool EnvironmentManager::IsBadWeather(RE::TESWeather *weather) {

@@ -14,3 +14,7 @@ Keyword Function HandleAddFactionFromMCM(Faction akFaction) global Native
 string[] Function GetAssignedKeywords() global Native
 Faction[] Function GetAssignedFactions() global Native
 Bool Function RemoveFactionKeywordAssignment(string akKeyword, Faction faction) global Native
+float Function GetTimeToLoseDetection() global Native
+Function SetTimeToLoseDetection(float akValue) global Native
+float Function GetDetectionThreshold() global Native
+Function SetDetectionThreshold(float akValue) global Native

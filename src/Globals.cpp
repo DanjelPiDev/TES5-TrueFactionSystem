@@ -3,9 +3,16 @@
 
 
 namespace NPE {
+    float TIME_TO_LOSE_DETECTION = 2.0f;
+    float DETECTION_THRESHOLD = 0.61f;
+    float DETECTION_RADIUS = 400.0f;
+
     std::atomic<bool> backgroundTaskRunning{false};
     std::unique_ptr<std::thread> backgroundTaskThread;
     std::mutex recognizedNPCsMutex;
+
+    std::vector<RE::TESFaction*> filteredFactions;
+    std::unordered_map<RE::FormID, RE::BSFixedString> factionEditorIDCache;
 
     DetectionManager& detectionManager = DetectionManager::GetInstance();
     DisguiseManager& disguiseManager = DisguiseManager::GetInstance();
@@ -84,4 +91,13 @@ namespace NPE {
 
         return baseWeight * (1.0f + curveFactor);
     }
+
+    float GetTimeToLoseDetection() { return TIME_TO_LOSE_DETECTION; }
+    void SetTimeToLoseDetection(float v) { TIME_TO_LOSE_DETECTION = v; }
+
+    float GetDetectionThreshold() { return DETECTION_THRESHOLD; }
+    void SetDetectionThreshold(float v) { DETECTION_THRESHOLD = v; }
+
+    float GetDetectionRadius() { return DETECTION_RADIUS; }
+    void SetDetectionRadius(float v) { DETECTION_RADIUS = v; }
 }

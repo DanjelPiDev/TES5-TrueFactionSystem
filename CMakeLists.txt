@@ -6,7 +6,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
     TrueFactionSystem 
-    VERSION 0.2.6
+    VERSION 0.5.0
     DESCRIPTION "A plugin for Skyrim Special Edition that adds a faction system based on disguises."
     LANGUAGES CXX)
 

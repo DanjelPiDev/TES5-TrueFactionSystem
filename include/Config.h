@@ -5,10 +5,6 @@
 
 
 namespace NPE {
-    constexpr float TIME_TO_LOSE_DETECTION = 2.0f;
-
-    constexpr float DETECTION_RADIUS = 400.0f;
-
     constexpr float MAX_DETECTION_ANGLE = 90.0f;
     constexpr float NPC_LEVEL_THRESHOLD = 20.0f;
     constexpr float ADD_TO_FACTION_THRESHOLD = 15.0f;

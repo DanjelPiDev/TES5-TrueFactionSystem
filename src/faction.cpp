@@ -196,24 +196,26 @@ namespace NPE {
     }
 
     RE::BSFixedString GetFactionEditorID(RE::TESFaction *faction) {
-        if (faction) {
-            const char *editorID = faction->GetFormEditorID();
+        if (!faction) return RE::BSFixedString("InvalidFaction");
 
-            // Check if editorID is valid
-            if (editorID && strlen(editorID) > 0) {
-                return RE::BSFixedString(editorID);
-            } else {
-                // Fallback: return the faction's form ID in hexadecimal as a string
-                char formIDBuffer[10];  // enough space for "0x" + 8 hex digits + null terminator
-                snprintf(formIDBuffer, sizeof(formIDBuffer), "0x%08X", faction->GetFormID());
-                auto factionName = factionFormIDToTagMap.find(faction->GetFormID());
-                if (factionName != factionFormIDToTagMap.end()) {
-                    return RE::BSFixedString(factionName->second);
-                }
-                return RE::BSFixedString(formIDBuffer);
-            }
+        auto it = factionEditorIDCache.find(faction->GetFormID());
+        if (it != factionEditorIDCache.end()) {
+            return it->second;
         }
-        return RE::BSFixedString("No FactionID found!");
+
+        // Not in cache (should not happen unless late-loaded)
+        const char *editorID = faction->GetFormEditorID();
+        if (editorID && strlen(editorID) > 0) {
+            auto value = RE::BSFixedString(editorID);
+            factionEditorIDCache[faction->GetFormID()] = value;
+            return value;
+        }
+
+        char fallback[32];
+        snprintf(fallback, sizeof(fallback), "0x%08X", faction->GetFormID());
+        auto value = RE::BSFixedString(fallback);
+        factionEditorIDCache[faction->GetFormID()] = value;
+        return value;
     }
 
     RE::TESFaction *GetFactionByEditorID(RE::BSFixedString factionEditorID) {

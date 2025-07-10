@@ -44,8 +44,8 @@ namespace NPE {
 
         void TriggerInvestigateLastKnownPosition(RE::Actor *npc, const RE::NiPoint3 &loc);
 
-        void SaveData(SKSE::SerializationInterface *a_intfc);
-        void LoadData(SKSE::SerializationInterface *a_intfc);
+        void Save(SKSE::SerializationInterface *a_intfc);
+        void Load(SKSE::SerializationInterface *a_intfc);
     private:
         DetectionManager() = default;
         /**

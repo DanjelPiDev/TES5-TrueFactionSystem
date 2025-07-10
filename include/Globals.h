@@ -22,6 +22,9 @@ namespace NPE {
     // Protected by a mutex to ensure thread safety (especially for recognizedNPCs)
     extern std::mutex recognizedNPCsMutex;
 
+    extern std::vector<RE::TESFaction*> filteredFactions;
+    extern std::unordered_map<RE::FormID, RE::BSFixedString> factionEditorIDCache;
+
     class DetectionManager;
     class DisguiseManager;
     class EnvironmentManager;
@@ -46,6 +49,19 @@ namespace NPE {
     extern std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
 
     extern const std::vector<ArmorSlot> armorBipedSlots;
+
+    extern float TIME_TO_LOSE_DETECTION;
+    extern float DETECTION_THRESHOLD;
+    extern float DETECTION_RADIUS;
+
+    float GetTimeToLoseDetection();
+    void SetTimeToLoseDetection(float v);
+
+    float GetDetectionThreshold();
+    void SetDetectionThreshold(float v);
+
+    float GetDetectionRadius();
+    void SetDetectionRadius(float v);
 
     float ComputeSlotWeight(RE::BGSBipedObjectForm::BipedObjectSlot slot);
 }

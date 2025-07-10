@@ -4,7 +4,7 @@
 
 namespace NPE {
 
-    void SaveArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc) {
+    void Save(SKSE::SerializationInterface* a_intfc) {
         std::uint32_t count = static_cast<std::uint32_t>(savedArmorKeywordAssociations.size());
         a_intfc->WriteRecordData(&count, sizeof(count));
         for (auto& entry : savedArmorKeywordAssociations) {
@@ -13,10 +13,10 @@ namespace NPE {
         }
     }
 
-    void LoadArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc) {
+    void Load(SKSE::SerializationInterface* a_intfc) {
         std::uint32_t count;
         if (!a_intfc->ReadRecordData(&count, sizeof(count))) {
-            spdlog::warn("LoadArmorKeywordDataCallback failed to read count");
+            spdlog::warn("Load failed to read count");
             return;
         }
         savedArmorKeywordAssociations.clear();
@@ -24,14 +24,14 @@ namespace NPE {
             ArmorKeywordData entry;
             if (!a_intfc->ReadRecordData(&entry.armorID, sizeof(entry.armorID)) ||
                 !a_intfc->ReadRecordData(&entry.keywordID, sizeof(entry.keywordID))) {
-                spdlog::warn("LoadArmorKeywordDataCallback incomplete data at index {}", i);
+                spdlog::warn("Load incomplete data at index {}", i);
                 return;
             }
             savedArmorKeywordAssociations.push_back(entry);
         }
     }
 
-    void RevertArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc) {
+    void Revert(SKSE::SerializationInterface* a_intfc) {
         savedArmorKeywordAssociations.clear();
     }
 

@@ -1,3 +1,5 @@
+#include <cstdint>
+
 #include "Main.h"
 #include "Globals.h"
 
@@ -16,6 +18,13 @@ static NPE::HitEventHandler hitEventHandler;
 
 RE::TESDataHandler* dataHandler;
 std::vector<RE::TESFaction*> allFactions;
+
+enum : uint32_t {
+    kRecordHeader = 'NPE1',         // floats
+    kRecordArmor = 'NPE2',          // ArmorKeywordData
+    kRecordDetection = 'NPE3',      // recognizedNPCs
+    kRecordDisguiseStatus = 'NPE4'  // PlayerDisguiseStatus
+};
 
 void StartBackgroundTask(Actor* player) {
     NPE::backgroundTaskRunning.store(true);
@@ -64,14 +73,60 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
     return TRUE;
 }
 
-void SaveCallback(SKSE::SerializationInterface *a_intfc) {
-    // SaveDetectionData(a_intfc);
-    NPE::SaveArmorKeywordDataCallback(a_intfc);
+static void SaveCallback(SKSE::SerializationInterface *intfc) {
+    auto saveRecord = [&](uint32_t type, uint32_t version, auto &&writeFunc) {
+        if (!intfc->OpenRecord(type, version)) {
+            spdlog::error("SaveCallback: Failed to open record {:#X} v{}", type, version);
+            return;
+        }
+        writeFunc();
+    };
+
+    // Floats
+    saveRecord(kRecordHeader, 1, [&]() {
+        intfc->WriteRecordData(&NPE::TIME_TO_LOSE_DETECTION, sizeof(float));
+        intfc->WriteRecordData(&NPE::DETECTION_THRESHOLD, sizeof(float));
+    });
+
+    // Armor-Keyword-Data
+    saveRecord(kRecordArmor, 1, [&]() { NPE::Save(intfc); });
+
+    // NPC-Detection-Data
+    saveRecord(kRecordDetection, 1, [&]() { NPE::detectionManager.Save(intfc); });
+
+    // Player-Disguise-Status
+    saveRecord(kRecordDisguiseStatus, 1, [&]() { NPE::playerDisguiseStatus.Save(intfc); });
 }
 
-void LoadCallback(SKSE::SerializationInterface *a_intfc) {
-    // LoadDetectionData(a_intfc);
-    NPE::LoadArmorKeywordDataCallback(a_intfc);
+static void LoadCallback(SKSE::SerializationInterface *intfc) {
+    uint32_t type, version, length;
+    while (intfc->GetNextRecordInfo(type, version, length)) {
+        switch (type) {
+            case kRecordHeader: 
+                float tLose, tThresh;
+                if (intfc->ReadRecordData(&tLose, sizeof(tLose))) NPE::TIME_TO_LOSE_DETECTION = tLose;
+                if (intfc->ReadRecordData(&tThresh, sizeof(tThresh))) NPE::DETECTION_THRESHOLD = tThresh;
+                break;
+            case kRecordArmor:
+                NPE::Load(intfc);
+                break;
+            case kRecordDetection:
+                NPE::detectionManager.Load(intfc);
+                break;
+            case kRecordDisguiseStatus:
+                NPE::playerDisguiseStatus.Load(intfc);
+                break;
+            default:
+                // unknown record type, skip it (or handle it if needed)
+                break;
+        }
+    }
+}
+
+static void RevertCallback(SKSE::SerializationInterface *) {
+    NPE::savedArmorKeywordAssociations.clear();
+    NPE::recognizedNPCs.clear();
+    NPE::playerDisguiseStatus.Clear();
 }
 
 std::vector<RE::TESFaction *> ConvertBSTArrayToVector(const RE::BSTArray<RE::TESFaction *> &bstArray) {
@@ -84,15 +139,35 @@ std::vector<RE::TESFaction *> ConvertBSTArrayToVector(const RE::BSTArray<RE::TES
     return vector;
 }
 
-void InitializeGlobalData() {
+static void InitializeGlobalData() {
     if (!dataHandler) {
         dataHandler = RE::TESDataHandler::GetSingleton();
     }
     const auto &bstFactions = dataHandler->GetFormArray<RE::TESFaction>();
     allFactions = ConvertBSTArrayToVector(bstFactions);
+
+    NPE::filteredFactions.clear();
+    for (RE::TESFaction *faction : allFactions) {
+        if (faction && strcmp(faction->GetName(), "") != 0) {
+            NPE::filteredFactions.push_back(faction);
+        }
+    }
+
+    for (RE::TESFaction *faction : allFactions) {
+        if (faction) {
+            const char *editorID = faction->GetFormEditorID();
+            if (editorID && strlen(editorID) > 0) {
+                NPE::factionEditorIDCache[faction->GetFormID()] = RE::BSFixedString(editorID);
+            } else {
+                char buffer[32];
+                snprintf(buffer, sizeof(buffer), "0x%08X", faction->GetFormID());
+                NPE::factionEditorIDCache[faction->GetFormID()] = RE::BSFixedString(buffer);
+            }
+        }
+    }
 }
 
-void InitializeLogging() {
+static void InitializeLogging() {
     auto path = logger::log_directory();
     if (!path) {
         report_and_fail("Unable to lookup SKSE logs directory.");
@@ -111,6 +186,11 @@ void InitializeLogging() {
 extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKSE::LoadInterface *skse) {
     SKSE::Init(skse);
     SKSE::GetPapyrusInterface()->Register(NPE::RegisterPapyrusFunctions);
+
+    auto serialization = SKSE::GetSerializationInterface();
+    serialization->SetSaveCallback(SaveCallback);
+    serialization->SetLoadCallback(LoadCallback);
+    serialization->SetRevertCallback(RevertCallback);
 
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
@@ -142,9 +222,6 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
 
                 StartBackgroundTask(player);
             }
-
-            SKSE::GetSerializationInterface()->SetSaveCallback(SaveCallback);
-            SKSE::GetSerializationInterface()->SetLoadCallback(LoadCallback);
 
             spdlog::info("TFS successfully loaded!");
             spdlog::dump_backtrace();

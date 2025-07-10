@@ -35,14 +35,11 @@ namespace NPE {
                                               playerDisguiseStatus.GetBonusValue(faction);
 
                         if (disguiseValue > 0.0f) {
-                            //CheckHoursPassed(npc, player, faction);
+                            this->CheckHoursPassed(npc, player, faction);
 
                             bool isInLineOfSight = environmentManager.IsInLineOfSight(npc, player);
-                            bool isInFieldOfView = environmentManager.IsInFieldOfView(npc, player);
-
-                            //if (!isInLineOfSight || !isInFieldOfView) {
-                            //    return false;
-                            //}
+                            // TODO: Rewrite this to use the field of view check in a more efficient way
+                            // bool isInFieldOfView = environmentManager.IsInFieldOfView(npc, player);
 
                             float distance = std::abs(player->GetPosition().GetDistance(npc->GetPosition()));
 
@@ -51,7 +48,7 @@ namespace NPE {
                             detectionProbability =
                                 AdjustProbabilityByDistance(detectionProbability, distance, detectionRadius);
 
-                            if (this->NPCRecognizesPlayer(npc, player, faction) ||
+                            if (isInLineOfSight && this->NPCRecognizesPlayer(npc, player, faction) ||
                                 this->DetectCrimeWhileDisguised(npc, player)) {
                                 this->StartCombat(npc, player, faction);
                                 recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
@@ -150,9 +147,8 @@ namespace NPE {
 
         recognitionProbability = std::clamp(recognitionProbability, 0.0f, 1.0f);
 
-        const float detectionThreshold = 0.4f;
         // Detection check using rng
-        if (recognitionProbability >= detectionThreshold) {
+        if (recognitionProbability >= DETECTION_THRESHOLD) {
             this->TriggerSuspiciousIdle(npc);
             static thread_local std::mt19937 gen(std::random_device{}());
             std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -193,22 +189,33 @@ namespace NPE {
     float DetectionManager::GetDetectionProbability(float disguiseValue) { return abs(100.0f - disguiseValue); }
 
     void DetectionManager::CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
-        RE::FormID npcID = npc->GetFormID();
-        float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
+        if (!npc || !player || !faction) {
+            return;
+        }
+
+        const RE::FormID npcID = npc->GetFormID();
+        const float currentHours = RE::Calendar::GetSingleton()->GetHoursPassed();
 
         std::lock_guard<std::mutex> lk(NPE::recognizedNPCsMutex);
         auto it = recognizedNPCs.find(npcID);
+        if (it == recognizedNPCs.end()) {
+            return;
+        }
 
-        if (it != recognizedNPCs.end()) {
-            NPCDetectionData &detectionData = recognizedNPCs[npcID];
+        float lastTime = it->second.lastDetectedTime;
+        float elapsed = currentHours - lastTime;
 
-            float elapsed = currentInGameHours - it->second.lastDetectedTime;
+        if (elapsed < 0.0f) {
+            elapsed = 0.0f;
+        }
 
-            if (elapsed > TIME_TO_LOSE_DETECTION) {
-                recognizedNPCs.erase(it);
-                if (playerDisguiseStatus.GetDisguiseValue(faction) > 5.0f) {
-                    player->AddToFaction(faction, 1);
-                }
+        // If it's been long enough, forget detection and restore faction
+        if (elapsed >= TIME_TO_LOSE_DETECTION) {
+            recognizedNPCs.erase(it);
+
+            float disguiseVal = playerDisguiseStatus.GetDisguiseValue(faction);
+            if (disguiseVal > ADD_TO_FACTION_THRESHOLD) {
+                player->AddToFaction(faction, 1);
             }
         }
     }
@@ -230,7 +237,7 @@ namespace NPE {
         }
     }
 
-    void DetectionManager::SaveData(SKSE::SerializationInterface *a_intfc) {
+    void DetectionManager::Save(SKSE::SerializationInterface *a_intfc) {
         std::uint32_t count = static_cast<std::uint32_t>(recognizedNPCs.size());
         a_intfc->WriteRecordData(&count, sizeof(count));
         // Write each NPC's FormID and detection struct
@@ -240,10 +247,10 @@ namespace NPE {
         }
     }
 
-    void DetectionManager::LoadData(SKSE::SerializationInterface *a_intfc) {
+    void DetectionManager::Load(SKSE::SerializationInterface *a_intfc) {
         std::uint32_t count;
         if (!a_intfc->ReadRecordData(&count, sizeof(count))) {
-            spdlog::warn("DetectionManager::LoadData failed to read count");
+            spdlog::warn("DetectionManager::Load failed to read count");
             return;
         }
         recognizedNPCs.clear();
@@ -251,7 +258,7 @@ namespace NPE {
             RE::FormID npcID;
             NPCDetectionData data;
             if (!a_intfc->ReadRecordData(&npcID, sizeof(npcID)) || !a_intfc->ReadRecordData(&data, sizeof(data))) {
-                spdlog::warn("DetectionManager::LoadData incomplete data at index {}", i);
+                spdlog::warn("DetectionManager::Load incomplete data at index {}", i);
                 return;
             }
             recognizedNPCs[npcID] = data;

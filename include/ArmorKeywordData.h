@@ -11,15 +11,15 @@ namespace NPE {
     /**
      *
      */
-    void SaveArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc);
+    void Save(SKSE::SerializationInterface* a_intfc);
 
     /**
      *
      */
-    void LoadArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc);
+    void Load(SKSE::SerializationInterface* a_intfc);
 
     /**
      * For new game?
      */
-    void RevertArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc);
+    void Revert(SKSE::SerializationInterface* a_intfc);
 }

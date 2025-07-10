@@ -2,6 +2,14 @@ Scriptname npeTFS_MCM extends SKI_ConfigBase
 
 Import npeTFS_NativeFunctions
 
+; ----------------------------------------------------------------
+; MCM Menu for TrueFactionSystem - Improved Layout version: 0.5.0
+; ----------------------------------------------------------------
+
+; -------- GLOBAL VARS  --------
+float timeToLoseDetection
+float detectionThreshold
+
 ; -------- PRIVATE VARS --------
 Armor[] wornArmors
 Faction[] availableFactions
@@ -18,29 +26,37 @@ int selectedKeywordIndex = 0
 string[] availableKeywordNames
 Int[] availableKeywordFormIDs
 
-int maxFactions = 50 ; Because papyrus does not like dynamic arrays, I have to limit it
-int currentFactionCount = 0 ; max factions are 50
+int MAX_FACTIONS = 50 ; Because papyrus does not like dynamic arrays, I have to limit it (Imagine beeing a const)
+int currentFactionCount = 0 ; track assigned factions count
 
+; Menu OIDs
 int _keywordDropdownOID
 int _addKeywordTextOptionOID
 int _removeKeywordTextOptionOID
 int _resetModTextOptionOID
 int _addFactionOptionOID
 int _removeFactionKeywordAssignementOID
+Int _timeSliderOID
+Int _detectionThresholdSliderOID
 
+; Assigned manage arrays
 string[] assignedKeywordsManage
 Faction[] assignedFactionsManage
 
-string playerInformationPageName = "Player Information"
-string armorKeywordSettingPageName = "Armor-Keyword Setting"
-string factionManagementPageName = "Assign Factions as Disguise"
-string factionOverviewPageName = "Disguise Faction Overview"
-string modSettingsPageName = "Settings"
+; Page names
+string playerInformationPageName = "$TFS_Player_Information"
+string armorKeywordSettingPageName = "$TFS_Armor_Keyword_Settings"
+string factionManagementPageName = "$TFS_Faction_Disguise_Setup"
+string factionOverviewPageName = "$TFS_Disguise_Assignments"
+string modSettingsPageName = "$TFS_General_Settings"
 
 Event OnConfigInit()
-    LoadCustomContent("skyui/TrueFactionSystem/TFS.dds")
+    ; Load icon for menu (Still not working)
+    LoadCustomContent("skyui/TrueFactionSystem/TFS.dds", 120, -33)
+
+    ; Initialize data arrays
     wornArmors = GetWornArmors(Game.GetPlayer())
-    availableFactions = GetAllFactions()
+    ; availableFactions = GetAllFactions()
     _wornArmorMenuOIDs = new int[100]
     _availableFactionsMenuOIDs = new int[100]
     _factionKeywordAssignementsOIDs = new int[100]
@@ -65,6 +81,10 @@ Event OnConfigInit()
     Pages[2] = factionManagementPageName
     Pages[3] = factionOverviewPageName
     Pages[4] = modSettingsPageName
+
+    ; Load persistent settings
+    timeToLoseDetection = GetTimeToLoseDetection()
+    detectionThreshold = GetDetectionThreshold() * 100
 endEvent
 
 Function InitWornArmor()
@@ -83,7 +103,7 @@ Function InitAvailableFactions()
 endFunction
 
 Function InitCustomKeywords()
-    ; Cannot use maxFactions for array init, because of reasons.
+    ; Cannot use MAX_FACTIONS for array init, because of reasons.
     availableKeywordNames = new string[50]
     availableKeywordFormIDs = new int[50]
 
@@ -149,7 +169,7 @@ Function InitCustomKeywords()
     currentFactionCount = 19
 
     int index = currentFactionCount
-    while index < maxFactions
+    while index < MAX_FACTIONS
         availableKeywordNames[index] = ""
         availableKeywordFormIDs[index] = 0
         index += 1
@@ -157,7 +177,7 @@ Function InitCustomKeywords()
 endFunction
 
 Function AddNewFaction(string factionName, Keyword factionKeyword)
-    if currentFactionCount >= maxFactions
+    if currentFactionCount >= MAX_FACTIONS
         Debug.Notification("Cannot add more factions. Limit reached.")
         return
     endif
@@ -168,7 +188,7 @@ Function AddNewFaction(string factionName, Keyword factionKeyword)
     currentFactionCount += 1
 
     Debug.Notification("Added faction: " + factionName)
-endFunction
+EndFunction
 
 Function RemoveNewFaction(string factionName, Keyword factionKeyword)
     int removeIndex = -1
@@ -238,60 +258,21 @@ Armor[] Function GetWornArmors(Actor target)
     return wornArmorForms
 EndFunction
 
-Function ArmorKeywordPage()
-    AddHeaderOption("Worn Armor | Form ID")
-    AddEmptyOption()
-    AddEmptyOption()
-    int index = 0
-    while index < wornArmorCount
-        if wornArmors[index]
-            _wornArmorMenuOIDs[index] = AddTextOption("Worn: " + wornArmors[index].GetName(), wornArmors[index].GetFormID())
-        endif
-        index += 1
-    endWhile
-    AddEmptyOption()
-
-    if selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
-        Armor selectedArmor = wornArmors[selectedArmorIndex]
-
-        AddEmptyOption()
-        AddHeaderOption("Selected Armor Keywords")
-        AddEmptyOption()
-
-        Keyword[] keywords = GetArmorKeywords(selectedArmor)
-        if keywords.Length > 0
-            index = 0
-            while index < keywords.Length
-                AddTextOption("Keyword: " + keywords[index].GetString(), keywords[index].GetFormID())
-                index += 1
-            endWhile
-        else
-            AddTextOption("No Keywords Found", 0)
-        endif
-
-        AddEmptyOption()
-        AddEmptyOption()
-        AddHeaderOption("Add Keyword to Armor")
-        _keywordDropdownOID = AddMenuOption("Select Keyword", availableKeywordNames[selectedKeywordIndex])
-        AddEmptyOption()
-
-        _addKeywordTextOptionOID = AddTextOption("Add Selected Keyword", "")
-
-        AddEmptyOption()
-        _removeKeywordTextOptionOID = AddTextOption("Remove Selected Keyword", "")
-    else
-        AddEmptyOption()
-        AddHeaderOption("No Armor Selected")
-    endif
-endFunction
+; ===================================================================
+;                               PAGES
+; ===================================================================
 
 Function PlayerInformationPage()
-    AddHeaderOption("Player Factions | Disguise Values")
+    SetCursorFillMode(TOP_TO_BOTTOM)
+    ; Page Title and description
+    AddHeaderOption(playerInformationPageName)
+    AddEmptyOptions(2)
+
+    ; Faction Disguise Values
+    AddHeaderOption("$TFS_Faction_Disguise_Status")
 
     Actor player = Game.GetPlayer()
-
     Faction[] playerFactions = GetFactionsForActor(player)
-
     ; For the race bonus value, store the values
     float raceBonusValue = 0
 
@@ -299,39 +280,33 @@ Function PlayerInformationPage()
         int index = 0
         while index < playerFactions.Length
             Faction currentFaction = playerFactions[index]
-            float tempRaceBonusValue = 0
-            tempRaceBonusValue = GetRaceBonusValueForFaction(currentFaction)
-            if tempRaceBonusValue > 0
-                raceBonusValue = tempRaceBonusValue  
+            float tempRace = GetRaceBonusValueForFaction(currentFaction)
+            if tempRace > raceBonusValue
+                raceBonusValue = tempRace
+            else
+                raceBonusValue = raceBonusValue
             endif
 
-            string factionEditorID = GetFactionEditorID(currentFaction)
-            float disguiseValue = GetDisguiseValueForFaction(currentFaction)
-            float disguiseBonusValue = GetDisguiseBonusValueForFaction(currentFaction)
-            ; Display the faction name (via Faction ID, because most factions does not have a name) and disguise value (+BonusValue +RaceBonusValue)
-            AddTextOption("Faction: " + factionEditorID, Math.Floor(disguiseValue) + " (+" + Math.Floor(disguiseBonusValue) + " +" + Math.Floor(tempRaceBonusValue) + ")")
+            string editorID = GetFactionEditorID(currentFaction)
+            float baseValue = GetDisguiseValueForFaction(currentFaction)
+            float bonusValue = GetDisguiseBonusValueForFaction(currentFaction)
+            AddTextOption("Faction: " + editorID, Math.Floor(baseValue) + " (Bonus: " + Math.Floor(bonusValue) + ")")
             index += 1
         endWhile
     else
-        AddTextOption("No Factions Found", 0)
+        AddTextOption("$TFS_No_Disguise_Factions_Active", 1)
     endif
 
-    AddEmptyOption()
-    AddEmptyOption()
-    AddHeaderOption("Player Race Bonus Value")
-    AddEmptyOption()
+    AddHeaderOption("$TFS_Race_Bonus")
     Race playerRace = player.GetRace()
-    AddTextOption("Race: " + playerRace.GetName(), Math.Floor(raceBonusValue), 0)
-endFunction
-
-Function SettingsPage()
-    AddHeaderOption("General Settings")
-    AddEmptyOption()
-    ; Reload the factions, because of modded factions, if the user changes the load order, the FormID changes!
-    _resetModTextOptionOID = AddTextOption("Reset Mod", "", 1) ; Not implemented!
-endFunction
+    AddTextOption("Race: " + playerRace.GetName(), Math.Floor(raceBonusValue))
+EndFunction
 
 Function FactionManagementPage()
+    SetCursorFillMode(TOP_TO_BOTTOM)
+
+    AddHeaderOption(factionManagementPageName)
+
     int index = 0
     
     AddEmptyOption()
@@ -340,49 +315,49 @@ Function FactionManagementPage()
     string factionEditorID = GetFactionEditorID(selectedFaction)
 
     AddEmptyOption()
-    AddHeaderOption("Selected Faction")
+    AddHeaderOption("$TFS_Selected_Faction")
     if selectedFaction
-        AddTextOption("Faction: " + selectedFaction.GetName(), factionEditorID, 1)
+        AddTextOption("Faction: " + selectedFaction.GetName(), "", 1)
     else
-        AddTextOption("Faction: No Faction selected", "", 1)
+        AddTextOption("$TFS_No_Faction_Selected", "", 1)
     endif
     
 
-    ; Dropdown for selecting a new keyword to add
-    AddEmptyOption()
     ; Button to add the selected keyword to the armor
     AddEmptyOption()
     int flag = 0
     if !selectedFaction
         flag = 1
     endif
-    _addFactionOptionOID = AddTextOption("Add Selected Faction as Disguise Valid", "", flag)
+    _addFactionOptionOID = AddTextOption("$TFS_Add_Faction_Disguise", "", flag)
     AddEmptyOption()
 
     int factionCount = availableFactions.Length
-    AddEmptyOption()
-    AddEmptyOption()
-    AddHeaderOption("Select Faction")
-    AddEmptyOption()
-    AddEmptyOption()
+
+    ; Switch to the right row
+    SetCursorPosition(1)
+
+    AddHeaderOption("$TFS_Selected_Faction")
+    AddEmptyOptions(1)
     if factionCount > 0
         ; List all available factions
         index = 0
         while index < factionCount
             Faction currentFaction = availableFactions[index]
-            factionEditorID = GetFactionEditorID(currentFaction)
+            ; factionEditorID = GetFactionEditorID(currentFaction)
 
-            ; Display the faction name and store its index for future selection
-            _availableFactionsMenuOIDs[index] = AddTextOption(currentFaction.GetName(), factionEditorID)
+            ; Display the faction name and store its index for future selection, factionEditorID
+            _availableFactionsMenuOIDs[index] = AddTextOption(currentFaction.GetName(), "", 0)
             index += 1
         endWhile
     else
-        AddTextOption("No Factions Available", "")
+        AddTextOption("$TFS_No_Factions_Available", "", 1)
     endif
 endFunction
 
 Function DisguiseKeywordAssignmentsPage()
-    AddHeaderOption("Disguise Keyword Assignments")
+    SetCursorFillMode(TOP_TO_BOTTOM)
+    AddHeaderOption(factionOverviewPageName)
     if assignedFactionsManage.Length == 0 || assignedKeywordsManage.Length == 0
         Debug.Notification("Trying to reinitialize Keyword Assignments...")
         InitAssignedKeywordFactionPair()
@@ -398,42 +373,92 @@ Function DisguiseKeywordAssignmentsPage()
 
         index += 1
     endWhile
-    AddEmptyOption()
-    AddEmptyOption()
+
+    AddEmptyOptions(2)
+
     int flag = 1
     if selectedKeywordFactionIndex >= 0
         flag = 0
     endif
 
-    _removeFactionKeywordAssignementOID = AddTextOption("Remove Keyword-Faction assignement", "", flag)
+    _removeFactionKeywordAssignementOID = AddTextOption("$TFS_Remove_Keyword_Faction", "", flag)
 endFunction
 
-; This event handles resetting and updating the page
-Event OnPageReset(string a_page)
-    UnloadCustomContent()
-    if (a_page == playerInformationPageName)
-        PlayerInformationPage()
-    elseif (a_page == armorKeywordSettingPageName)
-        InitWornArmor()
-        ArmorKeywordPage()
-    elseif (a_page == factionManagementPageName)
-        FactionManagementPage()
-    elseif (a_page == factionOverviewPageName)
-        InitAssignedKeywordFactionPair()
-        DisguiseKeywordAssignmentsPage()
-    elseif (a_page == modSettingsPageName)
-        SettingsPage()
-    endif
-EndEvent
+Function ArmorKeywordPage()
+    SetCursorFillMode(TOP_TO_BOTTOM)
+    ; Page Title and description
+    AddHeaderOption(armorKeywordSettingPageName, 1)
+    AddEmptyOptions(2)
 
-Event OnOptionMenuOpen(int a_option)
-    if a_option == _keywordDropdownOID
-        ; Populate the menu with available keywords (factions)
-        SetMenuDialogOptions(availableKeywordNames)
-        SetMenuDialogStartIndex(selectedKeywordIndex)
-        SetMenuDialogDefaultIndex(0)
+    int index = 0
+    while index < wornArmorCount
+        if wornArmors[index]
+            _wornArmorMenuOIDs[index] = AddTextOption("Worn: " + wornArmors[index].GetName(), wornArmors[index].GetFormID(), 1)
+        endif
+        index += 1
+    endWhile
+    AddEmptyOption()
+
+    if selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
+        Armor selectedArmor = wornArmors[selectedArmorIndex]
+
+        AddEmptyOption()
+        AddHeaderOption("$TFS_Selected_Armor_Keywords", 0)
+        AddEmptyOption()
+
+        Keyword[] keywords = GetArmorKeywords(selectedArmor)
+        if keywords.Length > 0
+            index = 0
+            while index < keywords.Length
+                AddTextOption("Keyword: " + keywords[index].GetString(), keywords[index].GetFormID(), 0)
+                index += 1
+            endWhile
+        else
+            AddTextOption("$TFS_No_Keywords_Found", "", 1)
+        endif
+
+        SetCursorPosition(1)
+
+        AddHeaderOption("$TFS_Add_Keyword_To_Armor", 1)
+        _keywordDropdownOID = AddMenuOption("Select Keyword", availableKeywordNames[selectedKeywordIndex])
+        AddEmptyOption()
+
+        _addKeywordTextOptionOID = AddTextOption("$TFS_Add_Selected_Keyword", "", 1)
+
+        AddEmptyOption()
+        _removeKeywordTextOptionOID = AddTextOption("Remove Selected Keyword", "", 1)
+    else
+        AddEmptyOption()
+        AddHeaderOption("No Armor Selected", 1)
     endif
-EndEvent
+EndFunction
+
+Function SettingsPage()
+    SetCursorFillMode(TOP_TO_BOTTOM)
+
+    AddHeaderOption("$TFS_General_Settings")
+    _timeSliderOID = AddSliderOption("$TFS_Time_Threshold", timeToLoseDetection, "$TFS_After_Hours", 0)
+
+    _detectionThresholdSliderOID = AddSliderOption("$TFS_Detection_Threshold", detectionThreshold, "{0}%", 0)
+
+    AddEmptyOptions(2)
+
+    AddHeaderOption("$TFS_Misc")
+    ; Reload the factions, because of modded factions, if the user changes the load order, the FormID changes!
+    _resetModTextOptionOID = AddTextOption("$TFS_Reset_Mod", "", 1) ; Not implemented!
+EndFunction
+
+; ===================================================================
+;                              Utils
+; ===================================================================
+
+Function AddEmptyOptions(int amount)
+    int index = 0
+    while index < amount
+        AddEmptyOption()
+        index += 1
+    EndWhile
+EndFunction
 
 Function HandleArmorSelection(int a_option)
     int index = 0
@@ -521,6 +546,76 @@ Function HandleRemoveKeywordFactionAssignements()
     endif
 endFunction
 
+; ===================================================================
+;                       Implements SKI Functions
+; ===================================================================
+
+Event OnOptionSliderOpen(int option)
+    if option == _timeSliderOID
+        SetSliderDialogStartValue(timeToLoseDetection)
+        SetSliderDialogDefaultValue(2.0)
+        SetSliderDialogRange(1.0, 168.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == _detectionThresholdSliderOID
+        SetSliderDialogStartValue(detectionThreshold)
+        SetSliderDialogDefaultValue(61.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    EndIf
+EndEvent
+
+Event OnOptionSliderAccept(int sliderID, float newValue)
+    If sliderID == _timeSliderOID
+        timeToLoseDetection = newValue
+        SetTimeToLoseDetection(timeToLoseDetection)
+        SetSliderOptionValue(_timeSliderOID, timeToLoseDetection, "$TFS_After_Hours")
+    ElseIf sliderID == _detectionThresholdSliderOID
+        detectionThreshold = newValue
+        SetDetectionThreshold((newValue / 100.0) as float)
+        SetSliderOptionValue(_detectionThresholdSliderOID, detectionThreshold, "{0}%")
+    EndIf
+EndEvent
+
+Event OnPageApply(String pageName)
+    If pageName == modSettingsPageName
+        SetTimeToLoseDetection(timeToLoseDetection)
+        SetDetectionThreshold(detectionThreshold)
+    EndIf
+EndEvent
+
+; This event handles resetting and updating the page
+Event OnPageReset(string a_page)
+    if a_page == ""
+        LoadCustomContent("skyui/TrueFactionSystem/TFS.dds", 120, -33)
+        return
+    else
+        UnloadCustomContent()
+    endif
+
+    if (a_page == playerInformationPageName)
+        PlayerInformationPage()
+    elseif (a_page == armorKeywordSettingPageName)
+        InitWornArmor()
+        ArmorKeywordPage()
+    elseif (a_page == factionManagementPageName)
+        FactionManagementPage()
+    elseif (a_page == factionOverviewPageName)
+        InitAssignedKeywordFactionPair()
+        DisguiseKeywordAssignmentsPage()
+    elseif (a_page == modSettingsPageName)
+        SettingsPage()
+    endif
+EndEvent
+
+Event OnOptionMenuOpen(int a_option)
+    if a_option == _keywordDropdownOID
+        ; Populate the menu with available keywords (factions)
+        SetMenuDialogOptions(availableKeywordNames)
+        SetMenuDialogStartIndex(selectedKeywordIndex)
+        SetMenuDialogDefaultIndex(0)
+    endif
+EndEvent
+
 Event OnOptionSelect(int a_option)
     HandleFactionSelection(a_option)
     HandleArmorSelection(a_option)
@@ -552,4 +647,14 @@ Event OnOptionMenuAccept(int a_option, int a_index)
         ; Refresh the menu to show the updated keyword selection
         ForcePageReset()
     endif
+EndEvent
+
+Event OnOptionHighlight(int a_option)
+    if a_option == _timeSliderOID
+        SetInfoText("$TFS_Time_Threshold_Info")
+    elseIf a_option == _detectionThresholdSliderOID
+        SetInfoText("$TFS_Detection_Threshold_Info")
+    Else
+        SetInfoText("")
+    endIf
 EndEvent
