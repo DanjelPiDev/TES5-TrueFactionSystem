@@ -18,3 +18,5 @@ float Function GetTimeToLoseDetection() global Native
 Function SetTimeToLoseDetection(float akValue) global Native
 float Function GetDetectionThreshold() global Native
 Function SetDetectionThreshold(float akValue) global Native
+float Function GetDetectionRadius() global Native
+Function SetDetectionRadius(float akValue) global Native

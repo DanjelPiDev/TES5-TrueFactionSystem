@@ -9,6 +9,7 @@ Import npeTFS_NativeFunctions
 ; -------- GLOBAL VARS  --------
 float timeToLoseDetection
 float detectionThreshold
+float detectionRadius
 
 ; -------- PRIVATE VARS --------
 Armor[] wornArmors
@@ -36,8 +37,9 @@ int _removeKeywordTextOptionOID
 int _resetModTextOptionOID
 int _addFactionOptionOID
 int _removeFactionKeywordAssignementOID
-Int _timeSliderOID
-Int _detectionThresholdSliderOID
+int _timeSliderOID
+int _detectionThresholdSliderOID
+int _detectionRadiusOID
 
 ; Assigned manage arrays
 string[] assignedKeywordsManage
@@ -85,6 +87,7 @@ Event OnConfigInit()
     ; Load persistent settings
     timeToLoseDetection = GetTimeToLoseDetection()
     detectionThreshold = GetDetectionThreshold() * 100
+    detectionRadius = GetDetectionRadius()
 endEvent
 
 Function InitWornArmor()
@@ -437,9 +440,10 @@ Function SettingsPage()
     SetCursorFillMode(TOP_TO_BOTTOM)
 
     AddHeaderOption("$TFS_General_Settings")
-    _timeSliderOID = AddSliderOption("$TFS_Time_Threshold", timeToLoseDetection, "$TFS_After_Hours", 0)
 
+    _timeSliderOID = AddSliderOption("$TFS_Time_Threshold", timeToLoseDetection, "$TFS_After_Hours", 0)
     _detectionThresholdSliderOID = AddSliderOption("$TFS_Detection_Threshold", detectionThreshold, "{0}%", 0)
+    _detectionRadiusOID = AddSliderOption("Detection Radius", detectionRadius, "{0} Units")
 
     AddEmptyOptions(2)
 
@@ -560,6 +564,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogStartValue(detectionThreshold)
         SetSliderDialogDefaultValue(61.0)
         SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == _detectionRadiusOID
+        SetSliderDialogStartValue(detectionRadius)
+        SetSliderDialogDefaultValue(400.0)
+        SetSliderDialogRange(50.0, 2000.0)
         SetSliderDialogInterval(1.0)
     EndIf
 EndEvent
