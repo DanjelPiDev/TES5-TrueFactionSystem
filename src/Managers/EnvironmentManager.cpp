@@ -54,26 +54,31 @@ namespace NPE {
         RE::NiPoint3 npcPos = npc->GetPosition();
         RE::NiPoint3 playerPos = player->GetPosition();
         RE::NiPoint3 dir = playerPos - npcPos;
-        // TODO: Check if the NPC is a creature or humanoid, and adjust the field of view accordingly
-        dir.z = 0.0f;  // Ignore z-axis for 2D check (Because the 3D is kind of broken, need to look into it)
-
-        float dist2d = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-        if (dist2d > DETECTION_RADIUS) {
+        
+        float distance = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+        if (distance > DETECTION_RADIUS) {
             return false;
         }
-        if (dist2d < 1e-4f) {
+        if (distance < 1e-4f) {
             return true;
         }
 
-        dir.x /= dist2d;
-        dir.y /= dist2d;
+        dir.x /= distance;
+        dir.y /= distance;
+        dir.z /= distance;
 
-        // read NPC-Yaw
+        // NPC-Orientation (Pitch = X, Yaw = Z)
+        float pitch = npc->GetAngleX();
         float yaw = npc->GetAngleZ();
-        RE::NiPoint3 forward{std::cosf(yaw), std::sinf(yaw), 0.0f};
 
-        float dot = forward.x * dir.x + forward.y * dir.y;
-        float halfFovRad = (fieldOfViewDegrees * 0.5f) * (M_PI / 180.0f);
+        RE::NiPoint3 forward;
+        forward.x = std::cosf(pitch) * std::cosf(yaw);
+        forward.y = std::cosf(pitch) * std::sinf(yaw);
+        forward.z = std::sinf(pitch);
+
+        float dot = forward.x * dir.x + forward.y * dir.y + forward.z * dir.z;
+
+        float halfFovRad = 0.5f * fieldOfViewDegrees * (M_PI / 180.0f);
         float minDot = std::cosf(halfFovRad);
 
         return dot >= minDot;

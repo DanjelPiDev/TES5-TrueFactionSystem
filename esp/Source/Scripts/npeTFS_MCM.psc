@@ -378,7 +378,8 @@ Function SettingsPage()
     _FOVAngleOID = AddSliderOption("FOV Angle", fovAngle, "$TFS_FOV_ANGLE", 0)
     _useLOSOptionOID = AddToggleOption("Use Line-Of-Sight Check?", useLOSCheck, 0)
 
-    AddEmptyOptions(2)
+    ; right row
+    SetCursorPosition(1)
 
     AddHeaderOption("$TFS_Misc")
     ; Reload the factions, because of modded factions, if the user changes the load order, the FormID changes!
@@ -587,7 +588,7 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogInterval(1.0)
     elseif option == _FOVAngleOID
         SetSliderDialogStartValue(fovAngle)
-        SetSliderDialogDefaultValue(90.0)
+        SetSliderDialogDefaultValue(120.0)
         SetSliderDialogRange(10.0, 360.0)
         SetSliderDialogInterval(1.0)
     endif
@@ -600,8 +601,12 @@ Event OnOptionSliderAccept(int sliderID, float newValue)
         SetSliderOptionValue(_timeSliderOID, timeToLoseDetection, "$TFS_After_Hours")
     elseif sliderID == _detectionThresholdSliderOID
         detectionThreshold = newValue
-        SetDetectionThreshold((newValue / 100.0) as float)
+        SetDetectionThreshold((detectionThreshold / 100.0) as float)
         SetSliderOptionValue(_detectionThresholdSliderOID, detectionThreshold, "{0}%")
+    elseif sliderID == _detectionRadiusOID
+        detectionRadius = newValue
+        SetDetectionRadius(detectionRadius)
+        SetSliderOptionValue(_detectionRadiusOID, detectionRadius, "{0} Units")
     elseif sliderID == _FOVAngleOID
         fovAngle = newValue
         SetFOVAngle(fovAngle)

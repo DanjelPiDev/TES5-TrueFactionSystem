@@ -113,7 +113,7 @@ static void LoadCallback(SKSE::SerializationInterface *intfc) {
                     if (intfc->ReadRecordData(&tThresh, sizeof(tThresh))) NPE::DETECTION_THRESHOLD = tThresh;
                     // Defaults for new variables (version 2)
                     NPE::DETECTION_RADIUS = 400.0f;
-                    NPE::FOV_ANGLE = 90.0f;
+                    NPE::FOV_ANGLE = 120.0f;
                     NPE::USE_FOV_CHECK = true;
                     NPE::USE_LINE_OF_SIGHT_CHECK = true;
                 } else if (version == 2) {
