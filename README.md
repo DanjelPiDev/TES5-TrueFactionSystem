@@ -163,4 +163,4 @@ $$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 - **Compatibility with other mods**: The plugin may conflict with mods that alter factions or armor keywords. Comprehensive mod compatibility is planned (Partially implemented).
 
 # New Native Functions
-See [Wiki](https://github.com/Dagait/TES5-TrueFactionSystem/wiki/API-Documentation) for more information.
+See [Wiki](https://github.com/DanjelPiDev/TES5-TrueFactionSystem/wiki/API-Documentation) for more information.
