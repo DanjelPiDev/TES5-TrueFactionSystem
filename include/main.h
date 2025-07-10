@@ -11,7 +11,7 @@
 #include "SKSE/Trampoline.h"
 
 
-extern std::vector<RE::TESFaction*> g_allFactions;
+extern std::vector<RE::TESFaction*> allFactions;
 
 // Function to start a background task for periodically updating disguise values and NPC detection
 void StartBackgroundTask(RE::Actor* player);

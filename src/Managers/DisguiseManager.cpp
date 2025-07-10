@@ -10,30 +10,31 @@ namespace NPE {
 
         // Gather the factions by armor tags
         std::vector<RE::TESFaction *> factions = GetFactionsByArmorTags(actor);
+        for (auto &possible : allFactions) {
+            if (actor->IsInFaction(possible) && !factionDisguiseValues.count(possible)) {
+                factionDisguiseValues[possible] = 0.0f;
+            }
+        }
+
         if (factions.empty()) {
             playerDisguiseStatus.Clear();
             RemovePlayerFromAllFactions(actor);
+            detectionManager.CheckNPCDetection(actor);
             return;
         }
 
         this->ClearArmorDisguiseValues(actor);
 
         // Iterate through armor slots and calculate values per faction
-        for (const auto &slot : armorSlotsSlot) {
+        for (const auto &slot : armorBipedSlots) {
             RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
-            if (!armor) {
-                continue;
-            }
+            if (!armor) continue;
 
             for (RE::TESFaction *faction : factions) {
-                if (!faction) {
-                    continue;
-                }
+                if (!faction) continue;
 
                 std::string factionTag = GetTagForFaction(faction);
-                if (factionTag.empty()) {
-                    continue;
-                }
+                if (factionTag.empty()) continue;
 
                 // Check if the armor has a keyword for the faction
                 if (armor->HasKeywordString(factionTag)) {
@@ -56,6 +57,8 @@ namespace NPE {
             disguiseValue = std::clamp(disguiseValue, 0.0f, 100.0f);
 
             playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
+
+            std::string factionTag = GetTagForFaction(faction);
 
             // Add or remove the actor from factions based on disguise value
             if (!actor->IsInFaction(faction) && disguiseValue > ADD_TO_FACTION_THRESHOLD) {
@@ -99,7 +102,7 @@ namespace NPE {
             if (!faction) continue;
 
             float bonus = 0.0f;
-            for (const auto &slotInfo : armorSlotsSlot) {
+            for (const auto &slotInfo : armorBipedSlots) {
                 auto armor = actor->GetWornArmor(slotInfo.slot);
                 if (armor && armor->HasKeywordString(factionTag)) {
                     bonus += ComputeSlotWeight(slotInfo.slot);

@@ -12,10 +12,10 @@ std::chrono::steady_clock::time_point lastUpdateDisguiseCheckTime;
 std::chrono::steady_clock::time_point lastCheckDetectionTime;
 std::chrono::steady_clock::time_point lastRaceCheckTime;
 
-static NPE::HitEventHandler g_hitEventHandler;
+static NPE::HitEventHandler hitEventHandler;
 
 RE::TESDataHandler* dataHandler;
-std::vector<RE::TESFaction*> g_allFactions;
+std::vector<RE::TESFaction*> allFactions;
 
 void StartBackgroundTask(Actor* player) {
     NPE::backgroundTaskRunning.store(true);
@@ -89,7 +89,7 @@ void InitializeGlobalData() {
         dataHandler = RE::TESDataHandler::GetSingleton();
     }
     const auto &bstFactions = dataHandler->GetFormArray<RE::TESFaction>();
-    g_allFactions = ConvertBSTArrayToVector(bstFactions);
+    allFactions = ConvertBSTArrayToVector(bstFactions);
 }
 
 void InitializeLogging() {
@@ -129,7 +129,7 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
 
             auto hitEventSource = RE::ScriptEventSourceHolder::GetSingleton();
             if (hitEventSource) {
-                hitEventSource->AddEventSink(&g_hitEventHandler);
+                hitEventSource->AddEventSink(&hitEventHandler);
                 spdlog::info("HitEventHandler registered!");
             }
 

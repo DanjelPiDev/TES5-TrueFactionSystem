@@ -45,7 +45,7 @@ namespace NPE {
 
     extern std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
 
-    extern const std::vector<ArmorSlot> armorSlotsSlot;
+    extern const std::vector<ArmorSlot> armorBipedSlots;
 
     float ComputeSlotWeight(RE::BGSBipedObjectForm::BipedObjectSlot slot);
 }

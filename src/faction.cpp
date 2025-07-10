@@ -131,7 +131,7 @@ namespace NPE {
     std::vector<RE::TESFaction *> GetFactionsByArmorTags(RE::Actor *actor) {
         std::set<RE::TESFaction *> factionsSet;
 
-        for (auto slot : armorSlotsSlot) {
+        for (auto slot : armorBipedSlots) {
             RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot.slot);
             if (wornArmor) {
                 for (const auto &[tag, factionID] : factionArmorKeywords) {
@@ -174,7 +174,7 @@ namespace NPE {
             return factions;
         }
 
-        for (RE::TESFaction *faction : g_allFactions) {
+        for (RE::TESFaction *faction : allFactions) {
             if (faction && actor->IsInFaction(faction)) {
                 factions.push_back(faction);
             }
@@ -186,7 +186,7 @@ namespace NPE {
     std::vector<RE::TESFaction *> GetAllFactions() {
         std::vector<RE::TESFaction *> factions;
 
-        for (RE::TESFaction *faction : g_allFactions) {
+        for (RE::TESFaction *faction : allFactions) {
             if (strcmp(faction->GetName(), "") != 0) {
                 factions.push_back(faction);
             }
@@ -221,7 +221,7 @@ namespace NPE {
             return nullptr;
         }
 
-        for (RE::TESFaction *faction : g_allFactions) {
+        for (RE::TESFaction *faction : allFactions) {
             if (faction && strcmp(factionEditorID.c_str(), faction->GetFormEditorID()) == 0) {
                 return faction;
             }

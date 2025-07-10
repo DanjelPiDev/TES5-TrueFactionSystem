@@ -53,7 +53,7 @@ namespace NPE {
     std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
     RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
 
-    const std::vector<ArmorSlot> armorSlotsSlot = {
+    const std::vector<ArmorSlot> armorBipedSlots = {
         {RE::BGSBipedObjectForm::BipedObjectSlot::kBody, CHEST_WEIGHT},
         {RE::BGSBipedObjectForm::BipedObjectSlot::kHands, GLOVES_WEIGHT},
         {RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, FOREARMS_WEIGHT},
@@ -66,7 +66,7 @@ namespace NPE {
 
     float ComputeSlotWeight(RE::BGSBipedObjectForm::BipedObjectSlot slot) {
         float baseWeight = 0.0f;
-        for (const auto& si : armorSlotsSlot) {
+        for (const auto& si : armorBipedSlots) {
             if (si.slot == slot) {
                 baseWeight = si.weight;
                 break;

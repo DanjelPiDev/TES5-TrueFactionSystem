@@ -53,7 +53,7 @@ namespace NPE {
         }
 
         // Get the NPC's rotation in radians
-        float npcRotationZ = npc->data.angle.z;
+        float npcRotationZ = npc->data.angle.z * (M_PI / 180.0f);
         RE::NiPoint3 npcForward(std::cos(npcRotationZ), std::sin(npcRotationZ), 0.0f);
 
         RE::NiPoint3 npcToPlayer = player->GetPosition() - npc->GetPosition();

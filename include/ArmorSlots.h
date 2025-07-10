@@ -29,7 +29,7 @@ namespace NPE {
         float weight;                                  /// The disguise weight value for the slot.
     };
 
-    extern const std::vector<ArmorSlot> armorSlotsSlot;
+    extern const std::vector<ArmorSlot> armorBipedSlots;
 
     /**
      *

@@ -16,7 +16,7 @@ namespace NPE {
 
         bool playerDetected = false;
         float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
-        float detectionRadius = DETECTION_RADIUS;
+        float detectionRadius = DETECTION_RADIUS; // Default is 400.0f
 
         std::vector<std::future<bool>> detectionFutures;
 
@@ -34,15 +34,15 @@ namespace NPE {
                         float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction) +
                                               playerDisguiseStatus.GetBonusValue(faction);
 
-                        if (disguiseValue > 0.0f && npc->IsInFaction(faction)) {
-                            CheckHoursPassed(npc, player, faction);
+                        if (disguiseValue > 0.0f) {
+                            //CheckHoursPassed(npc, player, faction);
 
                             bool isInLineOfSight = environmentManager.IsInLineOfSight(npc, player);
                             bool isInFieldOfView = environmentManager.IsInFieldOfView(npc, player);
 
-                            if (!isInFieldOfView) {
-                                return false;
-                            }
+                            //if (!isInLineOfSight || !isInFieldOfView) {
+                            //    return false;
+                            //}
 
                             float distance = std::abs(player->GetPosition().GetDistance(npc->GetPosition()));
 
@@ -141,25 +141,22 @@ namespace NPE {
             }
         }
 
+        spdlog::info("NPC {} – Dist: {:.1f}, Disguise: {:.1f}, Prob: {:.3f}", npc->GetName(), distance,
+                     playerDisguiseValue, recognitionProbability);
+
         if (recognitionProbability >= 1.0f) {
             return true;
         }
 
         recognitionProbability = std::clamp(recognitionProbability, 0.0f, 1.0f);
-        const float suspicionThreshold = 0.7f;
 
-        // If recognitionProbability is high but not a guaranteed detection
-        if (recognitionProbability >= suspicionThreshold) {
-            this->TriggerSuspiciousIdle(npc);
-        }
-
+        const float detectionThreshold = 0.4f;
         // Detection check using rng
-        if (recognitionProbability >= 0.72f) {
+        if (recognitionProbability >= detectionThreshold) {
+            this->TriggerSuspiciousIdle(npc);
             static thread_local std::mt19937 gen(std::random_device{}());
             std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-
-            float randomValue = dist(gen);
-            if (randomValue <= recognitionProbability) {
+            if (dist(gen) <= recognitionProbability) {
                 return true;
             }
         }
@@ -229,6 +226,7 @@ namespace NPE {
 
         if (npcFaction) {
             player->AddToFaction(npcFaction, -1);
+            npc->UpdateCombat();
         }
     }
 
