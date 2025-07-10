@@ -27,12 +27,16 @@ namespace NPE {
             return false;
         }
 
-        bool hasLineOfSight = false;
-        bool isDetected = npc->HasLineOfSight(player->AsReference(), hasLineOfSight);
-        if (isDetected) {
-            spdlog::debug("NPC has line of sight to player");
+        RE::NiPoint3 npcPos = npc->GetPosition();
+        RE::NiPoint3 playerPos = player->GetPosition();
+        float distance = npcPos.GetDistance(playerPos);
+        if (distance > DETECTION_RADIUS) {
+            return false;
         }
-        return isDetected;
+
+        bool hasLineOfSight = false;
+        npc->HasLineOfSight(player->AsReference(), hasLineOfSight);
+        return hasLineOfSight;
     }
 
     bool EnvironmentManager::IsNightTime() {
@@ -49,23 +53,32 @@ namespace NPE {
 
         RE::NiPoint3 npcPos = npc->GetPosition();
         RE::NiPoint3 playerPos = player->GetPosition();
-        RE::NiPoint3 toPlayer = playerPos - npcPos;
-        float distance = toPlayer.Unitize();
-        if (distance > DETECTION_RADIUS) {
+        RE::NiPoint3 dir = playerPos - npcPos;
+        // TODO: Check if the NPC is a creature or humanoid, and adjust the field of view accordingly
+        dir.z = 0.0f;  // Ignore z-axis for 2D check (Because the 3D is kind of broken, need to look into it)
+
+        float dist2d = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+        if (dist2d > DETECTION_RADIUS) {
             return false;
         }
+        if (dist2d < 1e-4f) {
+            return true;
+        }
 
-        // 2) Vorwärts­richtung des NPC (yaw bereits in Radians)
-        float yaw = npc->data.angle.z;  // direkt verwenden!
+        dir.x /= dist2d;
+        dir.y /= dist2d;
+
+        // read NPC-Yaw
+        float yaw = npc->GetAngleZ();
         RE::NiPoint3 forward{std::cosf(yaw), std::sinf(yaw), 0.0f};
 
-        // 3) Dot-Product und FOV-Schwelle
-        float dot = forward.Dot(toPlayer);  // cos(Abweichung)
+        float dot = forward.x * dir.x + forward.y * dir.y;
         float halfFovRad = (fieldOfViewDegrees * 0.5f) * (M_PI / 180.0f);
         float minDot = std::cosf(halfFovRad);
 
         return dot >= minDot;
     }
+
 
     bool EnvironmentManager::IsBadWeather(RE::TESWeather *weather) {
         // Check if the weather is rainy, foggy, or cloudy (bad for visibility)
@@ -128,7 +141,6 @@ namespace NPE {
             return 1.0f - norm;  // 0 = bright, 1 = very dark
         }
 
-        // --- Exterior: time of day, weather, nearby lights
         float factor = 0.0f;
         auto *sky = RE::Sky::GetSingleton();
         float hour = sky ? sky->currentGameHour : 12.0f;

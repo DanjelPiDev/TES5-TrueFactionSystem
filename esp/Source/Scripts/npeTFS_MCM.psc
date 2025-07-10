@@ -10,6 +10,7 @@ Import npeTFS_NativeFunctions
 float timeToLoseDetection
 float detectionThreshold
 float detectionRadius
+float fovAngle
 
 bool useFOVCheck
 bool useLOSCheck
@@ -45,6 +46,7 @@ int _detectionThresholdSliderOID
 int _detectionRadiusOID
 int _useFOVOptionOID
 int _useLOSOptionOID
+int _FOVAngleOID
 
 ; Assigned manage arrays
 string[] assignedKeywordsManage
@@ -93,6 +95,7 @@ Event OnConfigInit()
     timeToLoseDetection = GetTimeToLoseDetection()
     detectionThreshold = GetDetectionThreshold() * 100
     detectionRadius = GetDetectionRadius()
+    fovAngle = GetFOVAngle()
 
     useFOVCheck = GetUseFOVCheck()
     useLOSCheck = GetUseLineOfSightCheck()
@@ -186,88 +189,6 @@ Function InitCustomKeywords()
         index += 1
     endWhile
 endFunction
-
-Function AddNewFaction(string factionName, Keyword factionKeyword)
-    if currentFactionCount >= MAX_FACTIONS
-        Debug.Notification("Cannot add more factions. Limit reached.")
-        return
-    endif
-
-    ; Add the new faction and its keyword
-    availableKeywordNames[currentFactionCount] = factionName
-    availableKeywordFormIDs[currentFactionCount] = factionKeyword.GetFormID()
-    currentFactionCount += 1
-
-    Debug.Notification("Added faction: " + factionName)
-EndFunction
-
-Function RemoveNewFaction(string factionName, Keyword factionKeyword)
-    int removeIndex = -1
-    
-    int index = 0
-    bool break = false
-    while !break && index < currentFactionCount
-        if availableKeywordNames[index] == factionName
-            removeIndex = index
-            break = true
-        endif
-        index += 1
-    endWhile
-
-    if removeIndex != -1
-        while removeIndex < currentFactionCount - 1
-            availableKeywordNames[removeIndex] = availableKeywordNames[removeIndex + 1]
-            availableKeywordFormIDs[removeIndex] = availableKeywordFormIDs[removeIndex + 1]
-            removeIndex += 1
-        endWhile
-
-        availableKeywordNames[currentFactionCount - 1] = ""
-        availableKeywordFormIDs[currentFactionCount - 1] = 0
-        currentFactionCount -= 1
-
-        Debug.Notification("Removed faction: " + factionName)
-    else
-        Debug.Notification("Faction not found: " + factionName)
-    endif
-EndFunction
-
-
-; Function to retrieve keywords associated with a given armor
-Keyword[] Function GetArmorKeywords(Armor akArmor)
-    if akArmor == None
-        return None
-    endif
-
-    ; Retrieve the keywords associated with the armor
-    Keyword[] keywords = akArmor.GetKeywords()
-    return keywords
-EndFunction
-
-; Function to retrieve all the armor items the player is currently wearing
-Armor[] Function GetWornArmors(Actor target)
-    Armor[] wornArmorForms = new Armor[30] ; Max size to handle most scenarios
-    int index
-    int slotsChecked
-    slotsChecked += 0x00100000 ; Ignore reserved slots
-    slotsChecked += 0x00200000 ; Ignore reserved slot
-    slotsChecked += 0x80000000 ; Ignore FX slot
-
-    int thisSlot = 0x01
-    while (thisSlot < 0x80000000)
-        if (Math.LogicalAnd(slotsChecked, thisSlot) != thisSlot)
-            Armor thisArmor = target.GetWornForm(thisSlot) as Armor
-            if (thisArmor)
-                wornArmorForms[index] = thisArmor
-                index += 1
-                slotsChecked += thisArmor.GetSlotMask()
-            else
-                slotsChecked += thisSlot
-            endif
-        endif
-        thisSlot *= 2
-    endWhile
-    return wornArmorForms
-EndFunction
 
 ; ===================================================================
 ;                               PAGES
@@ -454,6 +375,7 @@ Function SettingsPage()
     _detectionRadiusOID = AddSliderOption("Detection Radius", detectionRadius, "{0} Units")
     AddEmptyOption()
     _useFOVOptionOID = AddToggleOption("Use FOV Check?", useFOVCheck, 0)
+    _FOVAngleOID = AddSliderOption("FOV Angle", fovAngle, "$TFS_FOV_ANGLE", 0)
     _useLOSOptionOID = AddToggleOption("Use Line-Of-Sight Check?", useLOSCheck, 0)
 
     AddEmptyOptions(2)
@@ -466,6 +388,88 @@ EndFunction
 ; ===================================================================
 ;                              Utils
 ; ===================================================================
+
+Function AddNewFaction(string factionName, Keyword factionKeyword)
+    if currentFactionCount >= MAX_FACTIONS
+        Debug.Notification("Cannot add more factions. Limit reached.")
+        return
+    endif
+
+    ; Add the new faction and its keyword
+    availableKeywordNames[currentFactionCount] = factionName
+    availableKeywordFormIDs[currentFactionCount] = factionKeyword.GetFormID()
+    currentFactionCount += 1
+
+    Debug.Notification("Added faction: " + factionName)
+EndFunction
+
+Function RemoveNewFaction(string factionName, Keyword factionKeyword)
+    int removeIndex = -1
+    
+    int index = 0
+    bool break = false
+    while !break && index < currentFactionCount
+        if availableKeywordNames[index] == factionName
+            removeIndex = index
+            break = true
+        endif
+        index += 1
+    endWhile
+
+    if removeIndex != -1
+        while removeIndex < currentFactionCount - 1
+            availableKeywordNames[removeIndex] = availableKeywordNames[removeIndex + 1]
+            availableKeywordFormIDs[removeIndex] = availableKeywordFormIDs[removeIndex + 1]
+            removeIndex += 1
+        endWhile
+
+        availableKeywordNames[currentFactionCount - 1] = ""
+        availableKeywordFormIDs[currentFactionCount - 1] = 0
+        currentFactionCount -= 1
+
+        Debug.Notification("Removed faction: " + factionName)
+    else
+        Debug.Notification("Faction not found: " + factionName)
+    endif
+EndFunction
+
+
+; Function to retrieve keywords associated with a given armor
+Keyword[] Function GetArmorKeywords(Armor akArmor)
+    if akArmor == None
+        return None
+    endif
+
+    ; Retrieve the keywords associated with the armor
+    Keyword[] keywords = akArmor.GetKeywords()
+    return keywords
+EndFunction
+
+; Function to retrieve all the armor items the player is currently wearing
+Armor[] Function GetWornArmors(Actor target)
+    Armor[] wornArmorForms = new Armor[30] ; Max size to handle most scenarios
+    int index
+    int slotsChecked
+    slotsChecked += 0x00100000 ; Ignore reserved slots
+    slotsChecked += 0x00200000 ; Ignore reserved slot
+    slotsChecked += 0x80000000 ; Ignore FX slot
+
+    int thisSlot = 0x01
+    while (thisSlot < 0x80000000)
+        if (Math.LogicalAnd(slotsChecked, thisSlot) != thisSlot)
+            Armor thisArmor = target.GetWornForm(thisSlot) as Armor
+            if (thisArmor)
+                wornArmorForms[index] = thisArmor
+                index += 1
+                slotsChecked += thisArmor.GetSlotMask()
+            else
+                slotsChecked += thisSlot
+            endif
+        endif
+        thisSlot *= 2
+    endWhile
+    return wornArmorForms
+EndFunction
 
 Function AddEmptyOptions(int amount)
     int index = 0
@@ -581,6 +585,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(400.0)
         SetSliderDialogRange(50.0, 2000.0)
         SetSliderDialogInterval(1.0)
+    elseif option == _FOVAngleOID
+        SetSliderDialogStartValue(fovAngle)
+        SetSliderDialogDefaultValue(90.0)
+        SetSliderDialogRange(10.0, 360.0)
+        SetSliderDialogInterval(1.0)
     endif
 EndEvent
 
@@ -593,6 +602,10 @@ Event OnOptionSliderAccept(int sliderID, float newValue)
         detectionThreshold = newValue
         SetDetectionThreshold((newValue / 100.0) as float)
         SetSliderOptionValue(_detectionThresholdSliderOID, detectionThreshold, "{0}%")
+    elseif sliderID == _FOVAngleOID
+        fovAngle = newValue
+        SetFOVAngle(fovAngle)
+        SetSliderOptionValue(_FOVAngleOID, fovAngle, "$TFS_FOV_ANGLE")
     endif
 EndEvent
 
@@ -687,6 +700,8 @@ Event OnOptionHighlight(int a_option)
         SetInfoText("$TFS_Detection_Threshold_Info")
     elseif a_option == _useFOVOptionOID
         SetInfoText("Decide if NPCs should use a custom FOV function to detect the player.")
+    elseif a_option == _FOVAngleOID
+        SetInfoText("Adjust the FOV, every NPC uses the same angle [10, 360]")
     elseif a_option == _useLOSOptionOID
         SetInfoText("Decide if NPCs need the Player to be in their line of sight (independet from FOV).")
     else

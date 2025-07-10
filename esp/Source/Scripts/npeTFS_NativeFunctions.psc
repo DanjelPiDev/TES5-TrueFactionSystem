@@ -24,3 +24,5 @@ bool Function GetUseFOVCheck() global Native
 Function SetUseFOVCheck(bool akValue) global Native
 bool Function GetUseLineOfSightCheck() global Native
 Function SetUseLineOfSightCheck(bool akValue) global Native
+float Function GetFOVAngle() global Native
+Function SetFOVAngle(float akValue) global Native

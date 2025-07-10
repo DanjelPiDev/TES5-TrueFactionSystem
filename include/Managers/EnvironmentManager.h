@@ -37,7 +37,7 @@ namespace NPE {
          */
         static bool IsNightTime();
         /**
-         * @brief Check if the player is within the NPC's line of sight.
+         * @brief Check if the player is within the NPC's line of sight. Takes also the DETECTION_RADIUS into account.
          *
          * @param npc The NPC whose line of sight is being checked.
          * @param player The player actor.
@@ -46,7 +46,7 @@ namespace NPE {
          */
         bool IsInLineOfSight(RE::Actor *npc, RE::Actor *player);
         /**
-         * @brief Check if the player is within the NPC's field of view.
+         * @brief Check if the player is within the NPC's field of view. Takes also the DETECTION_RADIUS into account.
          *
          * @param npc The NPC whose field of view is being checked.
          * @param player The player actor.
@@ -54,7 +54,7 @@ namespace NPE {
          * @return true If the player is within the NPC's field of view.
          * @return false If the player is outside the field of view.
          */
-        bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees = MAX_DETECTION_ANGLE);
+        bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees = 90.0f);
         float AdjustProbabilityByDistance(float detectionProbability, float distance, float maxDistance);
         void CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction);
         float GetEnvironmentalDetectionModifier(RE::Actor *player);

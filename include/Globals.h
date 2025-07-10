@@ -53,6 +53,7 @@ namespace NPE {
     extern float TIME_TO_LOSE_DETECTION;
     extern float DETECTION_THRESHOLD;
     extern float DETECTION_RADIUS;
+    extern float FOV_ANGLE;
 
     extern bool USE_FOV_CHECK;
     extern bool USE_LINE_OF_SIGHT_CHECK;
@@ -71,6 +72,9 @@ namespace NPE {
 
     bool GetUseLineOfSightCheck();
     void SetUseLineOfSightCheck(bool v);
+
+    float GetFOVAngle();
+    void SetFOVAngle(float v);
 
     float ComputeSlotWeight(RE::BGSBipedObjectForm::BipedObjectSlot slot);
 }

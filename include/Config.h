@@ -5,7 +5,6 @@
 
 
 namespace NPE {
-    constexpr float MAX_DETECTION_ANGLE = 90.0f;
     constexpr float NPC_LEVEL_THRESHOLD = 20.0f;
     constexpr float ADD_TO_FACTION_THRESHOLD = 15.0f;
 

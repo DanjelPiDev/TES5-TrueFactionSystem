@@ -111,4 +111,8 @@ namespace NPE {
     bool PapyrusGetUseLineOfSightCheck(RE::StaticFunctionTag*);
 
     void PapyrusSetUseLineOfSightCheck(RE::StaticFunctionTag*, bool useLineOfSightCheck);
+
+    void PapyrusSetFOVAngle(RE::StaticFunctionTag*, float angle);
+
+    float PapyrusGetFOVAngle(RE::StaticFunctionTag*);
 }

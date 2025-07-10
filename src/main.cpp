@@ -20,7 +20,7 @@ RE::TESDataHandler* dataHandler;
 std::vector<RE::TESFaction*> allFactions;
 
 enum : uint32_t {
-    kRecordHeader = 'NPE1',         // floats
+    kRecordHeader = 'NPE1',         // Header: TIME_TO_LOSE_DETECTION, DETECTION_THRESHOLD, DETECTION_RADIUS, FOV_ANGLE, USE_FOV_CHECK, USE_LINE_OF_SIGHT_CHECK
     kRecordArmor = 'NPE2',          // ArmorKeywordData
     kRecordDetection = 'NPE3',      // recognizedNPCs
     kRecordDisguiseStatus = 'NPE4'  // PlayerDisguiseStatus
@@ -66,7 +66,7 @@ void StopBackgroundTask() {
     }
 }
 // Ensure StopBackgroundTask() runs when the DLL unloads (Like disabling the plugin by removing the dll, the task could still be in the memory?)
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
+static BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_DETACH) {
         StopBackgroundTask();
     }
@@ -82,10 +82,14 @@ static void SaveCallback(SKSE::SerializationInterface *intfc) {
         writeFunc();
     };
 
-    // Floats
-    saveRecord(kRecordHeader, 1, [&]() {
+    // Header: floats and toggles
+    saveRecord(kRecordHeader, 2, [&]() {
         intfc->WriteRecordData(&NPE::TIME_TO_LOSE_DETECTION, sizeof(float));
         intfc->WriteRecordData(&NPE::DETECTION_THRESHOLD, sizeof(float));
+        intfc->WriteRecordData(&NPE::DETECTION_RADIUS, sizeof(float));
+        intfc->WriteRecordData(&NPE::FOV_ANGLE, sizeof(float));
+        intfc->WriteRecordData(&NPE::USE_FOV_CHECK, sizeof(bool));
+        intfc->WriteRecordData(&NPE::USE_LINE_OF_SIGHT_CHECK, sizeof(bool));
     });
 
     // Armor-Keyword-Data
@@ -102,11 +106,28 @@ static void LoadCallback(SKSE::SerializationInterface *intfc) {
     uint32_t type, version, length;
     while (intfc->GetNextRecordInfo(type, version, length)) {
         switch (type) {
-            case kRecordHeader: 
-                float tLose, tThresh;
-                if (intfc->ReadRecordData(&tLose, sizeof(tLose))) NPE::TIME_TO_LOSE_DETECTION = tLose;
-                if (intfc->ReadRecordData(&tThresh, sizeof(tThresh))) NPE::DETECTION_THRESHOLD = tThresh;
+            case kRecordHeader: {
+                if (version == 1) {
+                    float tLose, tThresh;
+                    if (intfc->ReadRecordData(&tLose, sizeof(tLose))) NPE::TIME_TO_LOSE_DETECTION = tLose;
+                    if (intfc->ReadRecordData(&tThresh, sizeof(tThresh))) NPE::DETECTION_THRESHOLD = tThresh;
+                    // Defaults for new variables (version 2)
+                    NPE::DETECTION_RADIUS = 400.0f;
+                    NPE::FOV_ANGLE = 90.0f;
+                    NPE::USE_FOV_CHECK = true;
+                    NPE::USE_LINE_OF_SIGHT_CHECK = true;
+                } else if (version == 2) {
+                    float tLose, tThresh, radius, angle;
+                    bool fov, los;
+                    if (intfc->ReadRecordData(&tLose, sizeof(tLose))) NPE::TIME_TO_LOSE_DETECTION = tLose;
+                    if (intfc->ReadRecordData(&tThresh, sizeof(tThresh))) NPE::DETECTION_THRESHOLD = tThresh;
+                    if (intfc->ReadRecordData(&radius, sizeof(radius))) NPE::DETECTION_RADIUS = radius;
+                    if (intfc->ReadRecordData(&angle, sizeof(angle))) NPE::FOV_ANGLE = angle;
+                    if (intfc->ReadRecordData(&fov, sizeof(fov))) NPE::USE_FOV_CHECK = fov;
+                    if (intfc->ReadRecordData(&los, sizeof(los))) NPE::USE_LINE_OF_SIGHT_CHECK = los;
+                }
                 break;
+            }
             case kRecordArmor:
                 NPE::Load(intfc);
                 break;
@@ -117,7 +138,6 @@ static void LoadCallback(SKSE::SerializationInterface *intfc) {
                 NPE::playerDisguiseStatus.Load(intfc);
                 break;
             default:
-                // unknown record type, skip it (or handle it if needed)
                 break;
         }
     }

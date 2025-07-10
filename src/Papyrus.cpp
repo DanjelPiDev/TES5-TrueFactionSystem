@@ -65,6 +65,9 @@ namespace NPE {
     bool PapyrusGetUseLineOfSightCheck(RE::StaticFunctionTag *) { return GetUseLineOfSightCheck(); }
     void PapyrusSetUseLineOfSightCheck(RE::StaticFunctionTag *, bool b) { SetUseLineOfSightCheck(b); }
 
+    float PapyrusGetFOVAngle(RE::StaticFunctionTag *) { return GetFOVAngle(); }
+    void PapyrusSetFOVAngle(RE::StaticFunctionTag *, float angle) { SetFOVAngle(angle); }
+
     // Function to bind the Papyrus function
     bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
         vm->RegisterFunction("AddKeywordToArmor", "npeTFS_NativeFunctions", PapyrusAddKeywordToArmor);
@@ -90,6 +93,8 @@ namespace NPE {
         vm->RegisterFunction("SetUseFOVCheck", "npeTFS_NativeFunctions", PapyrusSetUseFOVCheck);
         vm->RegisterFunction("GetUseLineOfSightCheck", "npeTFS_NativeFunctions", PapyrusGetUseLineOfSightCheck);
         vm->RegisterFunction("SetUseLineOfSightCheck", "npeTFS_NativeFunctions", PapyrusSetUseLineOfSightCheck);
+        vm->RegisterFunction("GetFOVAngle", "npeTFS_NativeFunctions", PapyrusGetFOVAngle);
+        vm->RegisterFunction("SetFOVAngle", "npeTFS_NativeFunctions", PapyrusSetFOVAngle);
         return true;
     }
 }

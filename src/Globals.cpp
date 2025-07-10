@@ -6,6 +6,7 @@ namespace NPE {
     float TIME_TO_LOSE_DETECTION = 2.0f;
     float DETECTION_THRESHOLD = 0.61f;
     float DETECTION_RADIUS = 400.0f;
+    float FOV_ANGLE = 90.0f;
     bool USE_FOV_CHECK = true;
     bool USE_LINE_OF_SIGHT_CHECK = true;
 
@@ -108,4 +109,7 @@ namespace NPE {
 
     bool GetUseLineOfSightCheck() { return USE_LINE_OF_SIGHT_CHECK; }
     void SetUseLineOfSightCheck(bool v) { USE_LINE_OF_SIGHT_CHECK = v; }
+
+    float GetFOVAngle() { return FOV_ANGLE; }
+    void SetFOVAngle(float v) { FOV_ANGLE = v; }
 }

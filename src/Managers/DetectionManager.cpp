@@ -42,7 +42,7 @@ namespace NPE {
                             bool useFOV = NPE::USE_FOV_CHECK;
 
                             bool passesLineOfSight = !useLineOfSight || environmentManager.IsInLineOfSight(npc, player);
-                            bool passesFOV = !useFOV || environmentManager.IsInFieldOfView(npc, player);
+                            bool passesFOV = !useFOV || environmentManager.IsInFieldOfView(npc, player, NPE::FOV_ANGLE);
 
                             bool visibilityRequired = useLineOfSight || useFOV;
                             bool passedVisibilityCheck = !visibilityRequired || (passesLineOfSight && passesFOV);
