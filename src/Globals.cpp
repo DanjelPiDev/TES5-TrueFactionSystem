@@ -6,6 +6,8 @@ namespace NPE {
     float TIME_TO_LOSE_DETECTION = 2.0f;
     float DETECTION_THRESHOLD = 0.61f;
     float DETECTION_RADIUS = 400.0f;
+    bool USE_FOV_CHECK = true;
+    bool USE_LINE_OF_SIGHT_CHECK = true;
 
     std::atomic<bool> backgroundTaskRunning{false};
     std::unique_ptr<std::thread> backgroundTaskThread;
@@ -100,4 +102,10 @@ namespace NPE {
 
     float GetDetectionRadius() { return DETECTION_RADIUS; }
     void SetDetectionRadius(float v) { DETECTION_RADIUS = v; }
+
+    bool GetUseFOVCheck() { return USE_FOV_CHECK; }
+    void SetUseFOVCheck(bool v) { USE_FOV_CHECK = v; }
+
+    bool GetUseLineOfSightCheck() { return USE_LINE_OF_SIGHT_CHECK; }
+    void SetUseLineOfSightCheck(bool v) { USE_LINE_OF_SIGHT_CHECK = v; }
 }

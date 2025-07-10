@@ -11,6 +11,9 @@ float timeToLoseDetection
 float detectionThreshold
 float detectionRadius
 
+bool useFOVCheck
+bool useLOSCheck
+
 ; -------- PRIVATE VARS --------
 Armor[] wornArmors
 Faction[] availableFactions
@@ -40,6 +43,8 @@ int _removeFactionKeywordAssignementOID
 int _timeSliderOID
 int _detectionThresholdSliderOID
 int _detectionRadiusOID
+int _useFOVOptionOID
+int _useLOSOptionOID
 
 ; Assigned manage arrays
 string[] assignedKeywordsManage
@@ -88,6 +93,9 @@ Event OnConfigInit()
     timeToLoseDetection = GetTimeToLoseDetection()
     detectionThreshold = GetDetectionThreshold() * 100
     detectionRadius = GetDetectionRadius()
+
+    useFOVCheck = GetUseFOVCheck()
+    useLOSCheck = GetUseLineOfSightCheck()
 endEvent
 
 Function InitWornArmor()
@@ -444,6 +452,9 @@ Function SettingsPage()
     _timeSliderOID = AddSliderOption("$TFS_Time_Threshold", timeToLoseDetection, "$TFS_After_Hours", 0)
     _detectionThresholdSliderOID = AddSliderOption("$TFS_Detection_Threshold", detectionThreshold, "{0}%", 0)
     _detectionRadiusOID = AddSliderOption("Detection Radius", detectionRadius, "{0} Units")
+    AddEmptyOption()
+    _useFOVOptionOID = AddToggleOption("Use FOV Check?", useFOVCheck, 0)
+    _useLOSOptionOID = AddToggleOption("Use Line-Of-Sight Check?", useLOSCheck, 0)
 
     AddEmptyOptions(2)
 
@@ -560,36 +571,36 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(2.0)
         SetSliderDialogRange(1.0, 168.0)
         SetSliderDialogInterval(1.0)
-    ElseIf option == _detectionThresholdSliderOID
+    elseif option == _detectionThresholdSliderOID
         SetSliderDialogStartValue(detectionThreshold)
         SetSliderDialogDefaultValue(61.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
-    ElseIf option == _detectionRadiusOID
+    elseif option == _detectionRadiusOID
         SetSliderDialogStartValue(detectionRadius)
         SetSliderDialogDefaultValue(400.0)
         SetSliderDialogRange(50.0, 2000.0)
         SetSliderDialogInterval(1.0)
-    EndIf
+    endif
 EndEvent
 
 Event OnOptionSliderAccept(int sliderID, float newValue)
-    If sliderID == _timeSliderOID
+    if sliderID == _timeSliderOID
         timeToLoseDetection = newValue
         SetTimeToLoseDetection(timeToLoseDetection)
         SetSliderOptionValue(_timeSliderOID, timeToLoseDetection, "$TFS_After_Hours")
-    ElseIf sliderID == _detectionThresholdSliderOID
+    elseif sliderID == _detectionThresholdSliderOID
         detectionThreshold = newValue
         SetDetectionThreshold((newValue / 100.0) as float)
         SetSliderOptionValue(_detectionThresholdSliderOID, detectionThreshold, "{0}%")
-    EndIf
+    endif
 EndEvent
 
 Event OnPageApply(String pageName)
-    If pageName == modSettingsPageName
+    if pageName == modSettingsPageName
         SetTimeToLoseDetection(timeToLoseDetection)
         SetDetectionThreshold(detectionThreshold)
-    EndIf
+    endif
 EndEvent
 
 ; This event handles resetting and updating the page
@@ -645,6 +656,17 @@ Event OnOptionSelect(int a_option)
         HandleRemoveKeywordFactionAssignements()
     endif
 
+    if a_option == _useFOVOptionOID
+        useFOVCheck = !useFOVCheck
+        SetToggleOptionValue(_useFOVOptionOID, useFOVCheck)
+        SetUseFOVCheck(useFOVCheck)
+    endif
+    if a_option == _useLOSOptionOID
+        useLOSCheck = !useLOSCheck
+        SetToggleOptionValue(_useLOSOptionOID, useLOSCheck)
+        SetUseLineOfSightCheck(useLOSCheck)
+    endif
+
     ForcePageReset()
 EndEvent
 
@@ -661,9 +683,13 @@ EndEvent
 Event OnOptionHighlight(int a_option)
     if a_option == _timeSliderOID
         SetInfoText("$TFS_Time_Threshold_Info")
-    elseIf a_option == _detectionThresholdSliderOID
+    elseif a_option == _detectionThresholdSliderOID
         SetInfoText("$TFS_Detection_Threshold_Info")
-    Else
+    elseif a_option == _useFOVOptionOID
+        SetInfoText("Decide if NPCs should use a custom FOV function to detect the player.")
+    elseif a_option == _useLOSOptionOID
+        SetInfoText("Decide if NPCs need the Player to be in their line of sight (independet from FOV).")
+    else
         SetInfoText("")
-    endIf
+    endif
 EndEvent

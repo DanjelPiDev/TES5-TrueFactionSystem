@@ -59,6 +59,12 @@ namespace NPE {
     float PapyrusGetDetectionRadius(RE::StaticFunctionTag *) { return GetDetectionRadius(); }
     void PapyrusSetDetectionRadius(RE::StaticFunctionTag *, float v) { SetDetectionRadius(v); }
 
+    bool PapyrusGetUseFOVCheck(RE::StaticFunctionTag *) { return GetUseFOVCheck(); }
+    void PapyrusSetUseFOVCheck(RE::StaticFunctionTag *, bool b) { SetUseFOVCheck(b); }
+
+    bool PapyrusGetUseLineOfSightCheck(RE::StaticFunctionTag *) { return GetUseLineOfSightCheck(); }
+    void PapyrusSetUseLineOfSightCheck(RE::StaticFunctionTag *, bool b) { SetUseLineOfSightCheck(b); }
+
     // Function to bind the Papyrus function
     bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
         vm->RegisterFunction("AddKeywordToArmor", "npeTFS_NativeFunctions", PapyrusAddKeywordToArmor);
@@ -80,6 +86,10 @@ namespace NPE {
         vm->RegisterFunction("SetDetectionThreshold", "npeTFS_NativeFunctions", PapyrusSetDetectionThreshold);
         vm->RegisterFunction("GetDetectionRadius", "npeTFS_NativeFunctions", PapyrusGetDetectionRadius);
         vm->RegisterFunction("SetDetectionRadius", "npeTFS_NativeFunctions", PapyrusSetDetectionRadius);
+        vm->RegisterFunction("GetUseFOVCheck", "npeTFS_NativeFunctions", PapyrusGetUseFOVCheck);
+        vm->RegisterFunction("SetUseFOVCheck", "npeTFS_NativeFunctions", PapyrusSetUseFOVCheck);
+        vm->RegisterFunction("GetUseLineOfSightCheck", "npeTFS_NativeFunctions", PapyrusGetUseLineOfSightCheck);
+        vm->RegisterFunction("SetUseLineOfSightCheck", "npeTFS_NativeFunctions", PapyrusSetUseLineOfSightCheck);
         return true;
     }
 }

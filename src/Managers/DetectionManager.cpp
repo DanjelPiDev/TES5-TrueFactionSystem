@@ -37,9 +37,15 @@ namespace NPE {
                         if (disguiseValue > 0.0f) {
                             this->CheckHoursPassed(npc, player, faction);
 
-                            bool isInLineOfSight = environmentManager.IsInLineOfSight(npc, player);
-                            // TODO: Rewrite this to use the field of view check in a more efficient way
-                            // bool isInFieldOfView = environmentManager.IsInFieldOfView(npc, player);
+                            // Optional line of sight and field of view checks (User configurable)
+                            bool useLineOfSight = NPE::USE_LINE_OF_SIGHT_CHECK;
+                            bool useFOV = NPE::USE_FOV_CHECK;
+
+                            bool passesLineOfSight = !useLineOfSight || environmentManager.IsInLineOfSight(npc, player);
+                            bool passesFOV = !useFOV || environmentManager.IsInFieldOfView(npc, player);
+
+                            bool visibilityRequired = useLineOfSight || useFOV;
+                            bool passedVisibilityCheck = !visibilityRequired || (passesLineOfSight && passesFOV);
 
                             float distance = std::abs(player->GetPosition().GetDistance(npc->GetPosition()));
 
@@ -47,14 +53,12 @@ namespace NPE {
                             float detectionProbability = GetDetectionProbability(disguiseValue);
                             detectionProbability =
                                 AdjustProbabilityByDistance(detectionProbability, distance, detectionRadius);
-
-                            if (isInLineOfSight && this->NPCRecognizesPlayer(npc, player, faction) ||
-                                this->DetectCrimeWhileDisguised(npc, player)) {
+                          
+                            if (passedVisibilityCheck && (this->NPCRecognizesPlayer(npc, player, faction) ||
+                                                          this->DetectCrimeWhileDisguised(npc, player))) {
                                 this->StartCombat(npc, player, faction);
-                                recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
-                                // NPC detected the player
                                 std::lock_guard<std::mutex> lk(NPE::recognizedNPCsMutex);
-                                recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
+                                recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours, player->GetPosition()};
                                 return true;
                             }
                         }

@@ -103,4 +103,12 @@ namespace NPE {
     float PapyrusGetDetectionRadius(RE::StaticFunctionTag*);
 
     void PapyrusSetDetectionRadius(RE::StaticFunctionTag*, float radius);
+
+    bool PapyrusGetUseFOVCheck(RE::StaticFunctionTag*);
+
+    void PapyrusSetUseFOVCheck(RE::StaticFunctionTag*, bool useFOVCheck);
+
+    bool PapyrusGetUseLineOfSightCheck(RE::StaticFunctionTag*);
+
+    void PapyrusSetUseLineOfSightCheck(RE::StaticFunctionTag*, bool useLineOfSightCheck);
 }

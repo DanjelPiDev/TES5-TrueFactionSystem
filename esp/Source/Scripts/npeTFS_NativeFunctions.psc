@@ -20,3 +20,7 @@ float Function GetDetectionThreshold() global Native
 Function SetDetectionThreshold(float akValue) global Native
 float Function GetDetectionRadius() global Native
 Function SetDetectionRadius(float akValue) global Native
+bool Function GetUseFOVCheck() global Native
+Function SetUseFOVCheck(bool akValue) global Native
+bool Function GetUseLineOfSightCheck() global Native
+Function SetUseLineOfSightCheck(bool akValue) global Native
