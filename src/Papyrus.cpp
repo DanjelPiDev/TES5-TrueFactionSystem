@@ -53,6 +53,9 @@ namespace NPE {
     float PapyrusGetTimeToLoseDetection(RE::StaticFunctionTag *) { return GetTimeToLoseDetection(); }
     void PapyrusSetTimeToLoseDetection(RE::StaticFunctionTag *, float v) { SetTimeToLoseDetection(v); }
 
+    float PapyrusGetInvestigationThreshold(RE::StaticFunctionTag *) { return GetInvestigationThreshold(); }
+    void PapyrusSetInvestigationThreshold(RE::StaticFunctionTag *, float v) { SetInvestigationThreshold(v); }
+
     float PapyrusGetDetectionThreshold(RE::StaticFunctionTag *) { return GetDetectionThreshold(); }
     void PapyrusSetDetectionThreshold(RE::StaticFunctionTag *, float v) { SetDetectionThreshold(v); }
 
@@ -85,6 +88,8 @@ namespace NPE {
         vm->RegisterFunction("GetRaceBonusValueForFaction", "npeTFS_NativeFunctions", PapyrusGetRaceBonusValue);
         vm->RegisterFunction("GetTimeToLoseDetection", "npeTFS_NativeFunctions", PapyrusGetTimeToLoseDetection);
         vm->RegisterFunction("SetTimeToLoseDetection", "npeTFS_NativeFunctions", PapyrusSetTimeToLoseDetection);
+        vm->RegisterFunction("GetInvestigationThreshold", "npeTFS_NativeFunctions", PapyrusGetInvestigationThreshold);
+        vm->RegisterFunction("SetInvestigationThreshold", "npeTFS_NativeFunctions", PapyrusSetInvestigationThreshold);
         vm->RegisterFunction("GetDetectionThreshold", "npeTFS_NativeFunctions", PapyrusGetDetectionThreshold);
         vm->RegisterFunction("SetDetectionThreshold", "npeTFS_NativeFunctions", PapyrusSetDetectionThreshold);
         vm->RegisterFunction("GetDetectionRadius", "npeTFS_NativeFunctions", PapyrusGetDetectionRadius);

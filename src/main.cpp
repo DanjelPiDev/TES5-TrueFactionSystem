@@ -20,7 +20,7 @@ RE::TESDataHandler* dataHandler;
 std::vector<RE::TESFaction*> allFactions;
 
 enum : uint32_t {
-    kRecordHeader = 'NPE1',         // Header: TIME_TO_LOSE_DETECTION, DETECTION_THRESHOLD, DETECTION_RADIUS, FOV_ANGLE, USE_FOV_CHECK, USE_LINE_OF_SIGHT_CHECK
+    kRecordHeader = 'NPE1',         // Header: TIME_TO_LOSE_DETECTION, INVESTIGATION_THRESHOLD, DETECTION_THRESHOLD, DETECTION_RADIUS, FOV_ANGLE, USE_FOV_CHECK, USE_LINE_OF_SIGHT_CHECK
     kRecordArmor = 'NPE2',          // ArmorKeywordData
     kRecordDetection = 'NPE3',      // recognizedNPCs
     kRecordDisguiseStatus = 'NPE4'  // PlayerDisguiseStatus
@@ -85,6 +85,7 @@ static void SaveCallback(SKSE::SerializationInterface *intfc) {
     // Header: floats and toggles
     saveRecord(kRecordHeader, 2, [&]() {
         intfc->WriteRecordData(&NPE::TIME_TO_LOSE_DETECTION, sizeof(float));
+        intfc->WriteRecordData(&NPE::INVESTIGATION_THRESHOLD, sizeof(float));
         intfc->WriteRecordData(&NPE::DETECTION_THRESHOLD, sizeof(float));
         intfc->WriteRecordData(&NPE::DETECTION_RADIUS, sizeof(float));
         intfc->WriteRecordData(&NPE::FOV_ANGLE, sizeof(float));
@@ -112,14 +113,16 @@ static void LoadCallback(SKSE::SerializationInterface *intfc) {
                     if (intfc->ReadRecordData(&tLose, sizeof(tLose))) NPE::TIME_TO_LOSE_DETECTION = tLose;
                     if (intfc->ReadRecordData(&tThresh, sizeof(tThresh))) NPE::DETECTION_THRESHOLD = tThresh;
                     // Defaults for new variables (version 2)
+                    NPE::INVESTIGATION_THRESHOLD = 0.43f;
                     NPE::DETECTION_RADIUS = 400.0f;
                     NPE::FOV_ANGLE = 120.0f;
                     NPE::USE_FOV_CHECK = true;
                     NPE::USE_LINE_OF_SIGHT_CHECK = true;
                 } else if (version == 2) {
-                    float tLose, tThresh, radius, angle;
+                    float tLose, tITresh, tThresh, radius, angle;
                     bool fov, los;
                     if (intfc->ReadRecordData(&tLose, sizeof(tLose))) NPE::TIME_TO_LOSE_DETECTION = tLose;
+                    if (intfc->ReadRecordData(&tITresh, sizeof(tITresh))) NPE::INVESTIGATION_THRESHOLD = tITresh;
                     if (intfc->ReadRecordData(&tThresh, sizeof(tThresh))) NPE::DETECTION_THRESHOLD = tThresh;
                     if (intfc->ReadRecordData(&radius, sizeof(radius))) NPE::DETECTION_RADIUS = radius;
                     if (intfc->ReadRecordData(&angle, sizeof(angle))) NPE::FOV_ANGLE = angle;

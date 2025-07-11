@@ -4,6 +4,7 @@
 
 namespace NPE {
     float TIME_TO_LOSE_DETECTION = 2.0f;
+    float INVESTIGATION_THRESHOLD = 0.43f;
     float DETECTION_THRESHOLD = 0.61f;
     float DETECTION_RADIUS = 400.0f;
     float FOV_ANGLE = 120.0f;
@@ -97,6 +98,9 @@ namespace NPE {
 
     float GetTimeToLoseDetection() { return TIME_TO_LOSE_DETECTION; }
     void SetTimeToLoseDetection(float v) { TIME_TO_LOSE_DETECTION = v; }
+
+    float GetInvestigationThreshold() { return INVESTIGATION_THRESHOLD; }
+    void SetInvestigationThreshold(float v) { INVESTIGATION_THRESHOLD = v; }
 
     float GetDetectionThreshold() { return DETECTION_THRESHOLD; }
     void SetDetectionThreshold(float v) { DETECTION_THRESHOLD = v; }

@@ -85,22 +85,41 @@ namespace NPE {
     void DetectionManager::TriggerInvestigateLastKnownPosition(RE::Actor *npc, const RE::NiPoint3 &lastKnownPos) {
         if (!npc || npc->IsDead() || npc->IsInCombat()) return;
 
-        static constexpr RE::FormID kXMarkerFormID = 0x0001F66E;
-        auto *markerBase = RE::TESForm::LookupByID<RE::TESBoundObject>(kXMarkerFormID);
-        if (!markerBase) return;
+        static constexpr RE::FormID kXMarkerHeadingFormID = 0x0000034;
+        static constexpr RE::FormID kXMarkerFormID = 0x000003B;
 
-        auto markerPtr = RE::PlayerCharacter::GetSingleton()->PlaceObjectAtMe(markerBase, false);
+        // AIPackage: npeInvestigatePlayerPosition: 0x04039821
+        // Keyword: npeInvestigate: 0x0403BFBB, 
+        // Activator: npeInvestigationActivator: 0x0403BFBC (Has Keyword npeInvestigate)
+
+        static constexpr RE::FormID kInvestigationActivatorFormID = 0x0403BFBC;
+        auto *activatorBase = RE::TESForm::LookupByID<RE::TESBoundObject>(kInvestigationActivatorFormID);
+        if (!activatorBase) return;
+
+        auto markerPtr = RE::PlayerCharacter::GetSingleton()->PlaceObjectAtMe(activatorBase, false);
         if (!markerPtr) return;
 
-        RE::TESObjectREFR *marker = markerPtr.get();
+        RE::TESObjectREFR *investigationMarker = markerPtr.get();
+        investigationMarker->SetPosition(lastKnownPos);
+        investigationMarker->MoveTo(RE::PlayerCharacter::GetSingleton());
 
-        marker->MoveTo(RE::PlayerCharacter::GetSingleton());
-        marker->SetPosition(lastKnownPos);
+        // Assign package to NPC
+        static constexpr RE::FormID kInvestigationPackageFormID = 0x04039821;
+        auto *investigatePackage = RE::TESForm::LookupByID<RE::TESPackage>(kInvestigationPackageFormID);
+        if (!investigatePackage) return;
 
-        npc->MoveTo(marker);
+        // Push the package to the actor
+        npc->PutCreatedPackage(investigatePackage,
+                               true,   // tempPackage: will be removed after completion
+                               false,  // createdPackage: false, because it's a static one from CK
+                               false   // allowFromFurniture: irrelevant for investigation
+        );
 
-        marker->Disable();
-        marker->IsMarkedForDeletion();
+        npc->EvaluatePackage(true, true);
+
+        // Disable the marker after the package is assigned and done with it
+        // investigationMarker->Disable();
+        // investigationMarker->IsMarkedForDeletion();
     }
 
     bool DetectionManager::NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
@@ -151,9 +170,10 @@ namespace NPE {
 
         recognitionProbability = std::clamp(recognitionProbability, 0.0f, 1.0f);
 
-        // Detection check using rng
+        if (recognitionProbability >= INVESTIGATION_THRESHOLD) {
+            this->TriggerInvestigateLastKnownPosition(npc, player->GetPosition());
+        }
         if (recognitionProbability >= DETECTION_THRESHOLD) {
-            this->TriggerSuspiciousIdle(npc);
             static thread_local std::mt19937 gen(std::random_device{}());
             std::uniform_real_distribution<float> dist(0.0f, 1.0f);
             if (dist(gen) <= recognitionProbability) {
@@ -162,19 +182,6 @@ namespace NPE {
         }
 
         return false;
-    }
-
-    void DetectionManager::TriggerSuspiciousIdle(RE::Actor *npc) {
-        static RE::FormID idleFormID = 0x000977ED;  // StudyIdle for now
-    
-        RE::TESIdleForm *idleForm = RE::TESForm::LookupByID<RE::TESIdleForm>(idleFormID);
-        if (idleForm && npc) {
-            RE::stl::zstring startState = "StudyIdle";
-            RE::stl::zstring endState = "StudyIdle";
-            npc->PlayAnimation(startState, endState);
-        } else {
-            spdlog::error("Failed to play animation.");
-        }
     }
 
     bool DetectionManager::DetectCrimeWhileDisguised(RE::Actor* npc, RE::Actor* player) {

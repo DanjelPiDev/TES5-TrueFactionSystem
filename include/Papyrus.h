@@ -96,6 +96,10 @@ namespace NPE {
 
     void PapyrusSetTimeToLoseDetection(RE::StaticFunctionTag*, float time);
 
+    float PapyrusGetInvestigationThreshold(RE::StaticFunctionTag*);
+
+    void PapyrusSetInvestigationThreshold(RE::StaticFunctionTag*, float threshold);
+
     float PapyrusGetDetectionThreshold(RE::StaticFunctionTag*);
 
     void PapyrusSetDetectionThreshold(RE::StaticFunctionTag*, float threshold);

@@ -51,6 +51,7 @@ namespace NPE {
     extern const std::vector<ArmorSlot> armorBipedSlots;
 
     extern float TIME_TO_LOSE_DETECTION;
+    extern float INVESTIGATION_THRESHOLD;
     extern float DETECTION_THRESHOLD;
     extern float DETECTION_RADIUS;
     extern float FOV_ANGLE;
@@ -60,6 +61,9 @@ namespace NPE {
 
     float GetTimeToLoseDetection();
     void SetTimeToLoseDetection(float v);
+
+    float GetInvestigationThreshold();
+    void SetInvestigationThreshold(float v);
 
     float GetDetectionThreshold();
     void SetDetectionThreshold(float v);
