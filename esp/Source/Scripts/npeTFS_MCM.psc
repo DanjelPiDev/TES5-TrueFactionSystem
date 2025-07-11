@@ -370,7 +370,7 @@ Function SettingsPage()
     AddHeaderOption("$TFS_General_Settings")
 
     _timeSliderOID = AddSliderOption("$TFS_Time_Threshold", timeToLoseDetection, "$TFS_After_Hours", 0)
-    _investigationThresholdSliderOID = AddSliderOption("Investigation threshold", investigationThreshold, 0)
+    _investigationThresholdSliderOID = AddSliderOption("Investigation threshold", investigationThreshold, "{0}%", 0)
     _detectionThresholdSliderOID = AddSliderOption("$TFS_Detection_Threshold", detectionThreshold, "{0}%", 0)
     _detectionRadiusOID = AddSliderOption("Detection Radius", detectionRadius, "{0} Units")
     AddEmptyOption()

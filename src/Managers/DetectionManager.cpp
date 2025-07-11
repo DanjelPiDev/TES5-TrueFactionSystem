@@ -56,7 +56,8 @@ namespace NPE {
                           
                             if (passedVisibilityCheck && (this->NPCRecognizesPlayer(npc, player, faction) ||
                                                           this->DetectCrimeWhileDisguised(npc, player))) {
-                                this->StartCombat(npc, player, faction);
+                                SKSE::GetTaskInterface()->AddTask([=] { this->StartCombat(npc, player, faction); });
+                                // this->StartCombat(npc, player, faction);
                                 std::lock_guard<std::mutex> lk(NPE::recognizedNPCsMutex);
                                 recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours, player->GetPosition()};
                                 return true;
@@ -116,7 +117,8 @@ namespace NPE {
         );
 
         npc->EvaluatePackage(true, true);
-
+        spdlog::info("Package added to npc {}", npc->GetName());
+        
         // Disable the marker after the package is assigned and done with it
         // investigationMarker->Disable();
         // investigationMarker->IsMarkedForDeletion();
@@ -163,6 +165,7 @@ namespace NPE {
 
         spdlog::info("NPC {} – Dist: {:.1f}, Disguise: {:.1f}, Prob: {:.3f}", npc->GetName(), distance,
                      playerDisguiseValue, recognitionProbability);
+        // If the recognition probability is 1.0 or higher, nothing happens, why?
 
         if (recognitionProbability >= 1.0f) {
             return true;
@@ -171,7 +174,7 @@ namespace NPE {
         recognitionProbability = std::clamp(recognitionProbability, 0.0f, 1.0f);
 
         if (recognitionProbability >= INVESTIGATION_THRESHOLD) {
-            this->TriggerInvestigateLastKnownPosition(npc, player->GetPosition());
+            SKSE::GetTaskInterface()->AddTask([=] { this->TriggerInvestigateLastKnownPosition(npc, player->GetPosition()); });
         }
         if (recognitionProbability >= DETECTION_THRESHOLD) {
             static thread_local std::mt19937 gen(std::random_device{}());
