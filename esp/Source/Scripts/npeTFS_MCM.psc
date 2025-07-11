@@ -35,6 +35,11 @@ Int[] availableKeywordFormIDs
 int MAX_FACTIONS = 50 ; Because papyrus does not like dynamic arrays, I have to limit it (Imagine beeing a const)
 int currentFactionCount = 0 ; track assigned factions count
 
+; Pagination
+int itemsPerPage
+int pageIndex
+int totalPages
+
 ; Menu OIDs
 int _keywordDropdownOID
 int _addKeywordTextOptionOID
@@ -49,6 +54,9 @@ int _detectionRadiusOID
 int _useFOVOptionOID
 int _useLOSOptionOID
 int _FOVAngleOID
+; for pagination
+int _prevPageOID
+int _nextPageOID 
 
 ; Assigned manage arrays
 string[] assignedKeywordsManage
@@ -102,6 +110,11 @@ Event OnConfigInit()
 
     useFOVCheck = GetUseFOVCheck()
     useLOSCheck = GetUseLineOfSightCheck()
+
+    ; Paging
+    itemsPerPage = 5
+    pageIndex    = 0
+    totalPages   = (availableFactions.Length + itemsPerPage - 1) / itemsPerPage
 endEvent
 
 Function InitWornArmor()
@@ -201,7 +214,8 @@ Function PlayerInformationPage()
     SetCursorFillMode(TOP_TO_BOTTOM)
     ; Page Title and description
     AddHeaderOption(playerInformationPageName)
-    AddEmptyOptions(2)
+    AddTextOption("Playername: " + Game.GetPlayer().GetName(), "", 1)
+    AddEmptyOption()
 
     ; Faction Disguise Values
     AddHeaderOption("$TFS_Faction_Disguise_Status")
@@ -274,17 +288,36 @@ Function FactionManagementPage()
 
     AddHeaderOption("$TFS_Selected_Faction")
     AddEmptyOptions(1)
+
+    int startIdx = pageIndex * itemsPerPage
+    int endIdx   = startIdx + itemsPerPage
+    if endIdx > availableFactions.Length
+        endIdx = availableFactions.Length
+    endif
+
     if factionCount > 0
         ; List all available factions
-        index = 0
-        while index < factionCount
-            Faction currentFaction = availableFactions[index]
-            ; factionEditorID = GetFactionEditorID(currentFaction)
-
+        index = startIdx
+        while index < endIdx
             ; Display the faction name and store its index for future selection, factionEditorID
-            _availableFactionsMenuOIDs[index] = AddTextOption(currentFaction.GetName(), "", 0)
+            _availableFactionsMenuOIDs[index - startIdx] = AddTextOption(availableFactions[index].GetName(), "", 0)
             index += 1
         endWhile
+
+        AddEmptyOption()
+        ; Paging Buttons (I love papyrus... so much possibilites with ternary operator WOW)
+        int prevDisabled = 0
+        if pageIndex == 0
+            prevDisabled = 1
+        endif
+
+        int nextDisabled = 0
+        if pageIndex >= totalPages - 1
+            nextDisabled = 1
+        endif
+
+        _prevPageOID = AddTextOption("$TFS_BACK", "", prevDisabled)
+        _nextPageOID = AddTextOption("$TFS_NEXT", "", nextDisabled)
     else
         AddTextOption("$TFS_No_Factions_Available", "", 1)
     endif
@@ -357,10 +390,10 @@ Function ArmorKeywordPage()
         _addKeywordTextOptionOID = AddTextOption("$TFS_Add_Selected_Keyword", "", 0)
 
         AddEmptyOption()
-        _removeKeywordTextOptionOID = AddTextOption("Remove Selected Keyword", "", 0)
+        _removeKeywordTextOptionOID = AddTextOption("$TFS_Remove_Selected_Keyword", "", 0)
     else
         AddEmptyOption()
-        AddHeaderOption("No Armor Selected", 1)
+        AddHeaderOption("$TFS_No_Armor_Selected", 1)
     endif
 EndFunction
 
@@ -372,11 +405,11 @@ Function SettingsPage()
     _timeSliderOID = AddSliderOption("$TFS_Time_Threshold", timeToLoseDetection, "$TFS_After_Hours", 0)
     _investigationThresholdSliderOID = AddSliderOption("Investigation threshold", investigationThreshold, "{0}%", 0)
     _detectionThresholdSliderOID = AddSliderOption("$TFS_Detection_Threshold", detectionThreshold, "{0}%", 0)
-    _detectionRadiusOID = AddSliderOption("Detection Radius", detectionRadius, "{0} Units")
+    _detectionRadiusOID = AddSliderOption("$TFS_Detection_Radius", detectionRadius, "$TFS_Units")
     AddEmptyOption()
-    _useFOVOptionOID = AddToggleOption("Use FOV Check?", useFOVCheck, 0)
-    _FOVAngleOID = AddSliderOption("FOV Angle", fovAngle, "$TFS_FOV_ANGLE", 0)
-    _useLOSOptionOID = AddToggleOption("Use Line-Of-Sight Check?", useLOSCheck, 0)
+    _useFOVOptionOID = AddToggleOption("$TFS_Use_FOV_Check", useFOVCheck, 0)
+    _FOVAngleOID = AddSliderOption("$TFS_FOV_Angle", fovAngle, "$TFS_FOV_Angle_unit", 0)
+    _useLOSOptionOID = AddToggleOption("$TFS_Use_LOS_Check", useLOSCheck, 0)
 
     ; right row
     SetCursorPosition(1)
@@ -510,8 +543,8 @@ Function HandleFactionSelection(int a_option)
     int index = 0
     bool breakLoop = false
     while !breakLoop && index < availableFactions.Length
-        if a_option == _availableFactionsMenuOIDs[index] && availableFactions[index]
-            Debug.Notification("Selected Faction: " + availableFactions[index].GetName())
+        if a_option == _availableFactionsMenuOIDs[index - (pageIndex * itemsPerPage)] && availableFactions[index - (pageIndex * itemsPerPage)]
+            Debug.Notification("Selected Faction: " + availableFactions[index - (pageIndex * itemsPerPage)].GetName())
             selectedFactionIndex = index
             ForcePageReset()
             breakLoop = true
@@ -579,7 +612,7 @@ Event OnOptionSliderOpen(int option)
     elseif option == _investigationThresholdSliderOID
         SetSliderDialogStartValue(investigationThreshold)
         SetSliderDialogDefaultValue(43.0)
-        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogRange(0.0, detectionThreshold)
         SetSliderDialogInterval(1.0)
     elseif option == _detectionThresholdSliderOID
         SetSliderDialogStartValue(detectionThreshold)
@@ -698,6 +731,17 @@ Event OnOptionSelect(int a_option)
         useLOSCheck = !useLOSCheck
         SetToggleOptionValue(_useLOSOptionOID, useLOSCheck)
         SetUseLineOfSightCheck(useLOSCheck)
+    endif
+
+    ; Paging
+    if a_option == _nextPageOID
+        if pageIndex < totalPages - 1
+            pageIndex += 1
+        endif
+    elseif a_option == _prevPageOID
+        if pageIndex > 0
+            pageIndex -= 1
+        endif
     endif
 
     ForcePageReset()
