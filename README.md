@@ -1,8 +1,6 @@
 # True Faction System (TFS)
 
-> ⚠️ **Warning: This mod is still a WIP and might break some quests. Use with caution!**
->
-> [![Download Latest Release](https://img.shields.io/github/v/release/Dagait/TES5-TrueFactionSystem)](https://github.com/Dagait/TES5-TrueFactionSystem/releases/latest)
+> [![Download Latest Release](https://img.shields.io/github/v/release/DanjelPiDev/TES5-TrueFactionSystem)](https://github.com/DanjelPiDev/TES5-TrueFactionSystem/releases/latest)
 
 <p align="center">
     <img src="https://github.com/user-attachments/assets/11b815a0-8bae-4a8a-8f2d-9a6bc0b2d119" width="400" />
@@ -143,10 +141,11 @@ $$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 
 ### Current Features:
 
-- Extended faction detection: Support for multiple factions simultaneously, based on worn armor pieces.
-- Dynamic stealth value: Calculation of stealth value for each faction individually, depending on worn faction armors.
-- Background process: Automatic checking of faction affiliation and detection probability every 5 seconds without player intervention.
-- Combat system: NPCs will attack the player when they recognize them as an enemy. Attacking faction NPCs removes the player from that faction.
+- **Extended faction detection**: Support for multiple factions simultaneously, based on worn armor pieces.
+- **Dynamic stealth value**: Calculation of stealth value for each faction individually, depending on worn faction armors.
+- **Background process**: Automatic checking of faction affiliation and detection probability every 5 seconds without player intervention.
+- **Combat system**: NPCs will attack the player when they recognize them as an enemy. Attacking faction NPCs removes the player from that faction.
+- **Mod support**: Support for custom faction armors and factions from mods (MCM).
 
 ### Planned Features:
 
