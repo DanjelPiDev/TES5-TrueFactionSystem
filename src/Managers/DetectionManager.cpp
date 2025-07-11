@@ -85,40 +85,56 @@ namespace NPE {
 
     void DetectionManager::TriggerInvestigateLastKnownPosition(RE::Actor *npc, const RE::NiPoint3 &lastKnownPos) {
         if (!npc || npc->IsDead() || npc->IsInCombat()) return;
-
-        static constexpr RE::FormID kXMarkerHeadingFormID = 0x0000034;
-        static constexpr RE::FormID kXMarkerFormID = 0x000003B;
-
         // AIPackage: npeInvestigatePlayerPosition: 0x04039821
         // Keyword: npeInvestigate: 0x0403BFBB, 
         // Activator: npeInvestigationActivator: 0x0403BFBC (Has Keyword npeInvestigate)
 
-        static constexpr RE::FormID kInvestigationActivatorFormID = 0x0403BFBC;
-        auto *activatorBase = RE::TESForm::LookupByID<RE::TESBoundObject>(kInvestigationActivatorFormID);
-        if (!activatorBase) return;
+        constexpr char kPluginName[] = "TrueFactionSystem.esp";
+        constexpr RE::FormID kActivatorFormLower = 0x003BFBC;  // Lower 3 Bytes-> CK: 0403BFBC -> 003BFBC
+        constexpr RE::FormID kPackageFormLower = 0x0039821;    // Lower 3 Bytes-> CK: 04039821 -> 0039821
+
+        RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
+        std::optional<uint8_t> modIndexOpt = dataHandler->GetLoadedModIndex(kPluginName);
+        if (!modIndexOpt) {
+            spdlog::warn("Mod '{}' not found in Load Order!", kPluginName);
+            return;
+        }
+        std::uint8_t modIndex = *modIndexOpt;
+
+        RE::FormID activatorFormID = (static_cast<RE::FormID>(modIndex) << 24) | kActivatorFormLower;
+        RE::FormID packageFormID = (static_cast<RE::FormID>(modIndex) << 24) | kPackageFormLower;
+
+        auto activatorBase = RE::TESForm::LookupByID<RE::TESBoundObject>(activatorFormID);
+        if (!activatorBase) {
+            spdlog::warn("Investigation-Activator not found (FormID {:08X})", activatorFormID);
+            return;
+        }
 
         auto markerPtr = RE::PlayerCharacter::GetSingleton()->PlaceObjectAtMe(activatorBase, false);
-        if (!markerPtr) return;
-
+        if (!markerPtr) {
+            spdlog::warn("Couldn't spawn Investigation-Marker.");
+            return;
+        }
         RE::TESObjectREFR *investigationMarker = markerPtr.get();
         investigationMarker->SetPosition(lastKnownPos);
         investigationMarker->MoveTo(RE::PlayerCharacter::GetSingleton());
 
-        // Assign package to NPC
-        static constexpr RE::FormID kInvestigationPackageFormID = 0x04039821;
-        auto *investigatePackage = RE::TESForm::LookupByID<RE::TESPackage>(kInvestigationPackageFormID);
-        if (!investigatePackage) return;
+        auto investigatePackage = RE::TESForm::LookupByID<RE::TESPackage>(packageFormID);
+        if (!investigatePackage) {
+            spdlog::warn("Investigation-Package not found (FormID {:08X})", packageFormID);
+            return;
+        }
 
         // Push the package to the actor
         npc->PutCreatedPackage(investigatePackage,
                                true,   // tempPackage: will be removed after completion
-                               false,  // createdPackage: false, because it's a static one from CK
+                               false,  // createdPackage: false, because it's a static one from CK 0x04039821
                                false   // allowFromFurniture: irrelevant for investigation
         );
 
         npc->EvaluatePackage(true, true);
         spdlog::info("Package added to npc {}", npc->GetName());
-        
+
         // Disable the marker after the package is assigned and done with it
         // investigationMarker->Disable();
         // investigationMarker->IsMarkedForDeletion();
@@ -162,11 +178,6 @@ namespace NPE {
                 recognizedNPCs.erase(npcID);
             }
         }
-
-        spdlog::info("NPC {} – Dist: {:.1f}, Disguise: {:.1f}, Prob: {:.3f}", npc->GetName(), distance,
-                     playerDisguiseValue, recognitionProbability);
-        // If the recognition probability is 1.0 or higher, nothing happens, why?
-
         if (recognitionProbability >= 1.0f) {
             return true;
         }
