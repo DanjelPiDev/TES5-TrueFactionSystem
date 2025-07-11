@@ -16,6 +16,8 @@ Faction[] Function GetAssignedFactions() global Native
 Bool Function RemoveFactionKeywordAssignment(string akKeyword, Faction faction) global Native
 float Function GetTimeToLoseDetection() global Native
 Function SetTimeToLoseDetection(float akValue) global Native
+float Function GetInvestigationThreshold() global Native
+Function SetInvestigationThreshold(float akValue) global Native
 float Function GetDetectionThreshold() global Native
 Function SetDetectionThreshold(float akValue) global Native
 float Function GetDetectionRadius() global Native

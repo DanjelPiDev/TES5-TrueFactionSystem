@@ -8,6 +8,7 @@ Import npeTFS_NativeFunctions
 
 ; -------- GLOBAL VARS  --------
 float timeToLoseDetection
+float investigationThreshold
 float detectionThreshold
 float detectionRadius
 float fovAngle
@@ -42,6 +43,7 @@ int _resetModTextOptionOID
 int _addFactionOptionOID
 int _removeFactionKeywordAssignementOID
 int _timeSliderOID
+int _investigationThresholdSliderOID
 int _detectionThresholdSliderOID
 int _detectionRadiusOID
 int _useFOVOptionOID
@@ -93,6 +95,7 @@ Event OnConfigInit()
 
     ; Load persistent settings
     timeToLoseDetection = GetTimeToLoseDetection()
+    investigationThreshold = GetInvestigationThreshold() * 100
     detectionThreshold = GetDetectionThreshold() * 100
     detectionRadius = GetDetectionRadius()
     fovAngle = GetFOVAngle()
@@ -320,12 +323,11 @@ Function ArmorKeywordPage()
     SetCursorFillMode(TOP_TO_BOTTOM)
     ; Page Title and description
     AddHeaderOption(armorKeywordSettingPageName, 1)
-    AddEmptyOptions(2)
 
     int index = 0
     while index < wornArmorCount
         if wornArmors[index]
-            _wornArmorMenuOIDs[index] = AddTextOption("Worn: " + wornArmors[index].GetName(), wornArmors[index].GetFormID(), 1)
+            _wornArmorMenuOIDs[index] = AddTextOption("Worn: " + wornArmors[index].GetName(), "", 0) ;wornArmors[index].GetFormID(), 1
         endif
         index += 1
     endWhile
@@ -333,10 +335,7 @@ Function ArmorKeywordPage()
 
     if selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
         Armor selectedArmor = wornArmors[selectedArmorIndex]
-
-        AddEmptyOption()
         AddHeaderOption("$TFS_Selected_Armor_Keywords", 0)
-        AddEmptyOption()
 
         Keyword[] keywords = GetArmorKeywords(selectedArmor)
         if keywords.Length > 0
@@ -351,14 +350,14 @@ Function ArmorKeywordPage()
 
         SetCursorPosition(1)
 
-        AddHeaderOption("$TFS_Add_Keyword_To_Armor", 1)
+        AddHeaderOption("$TFS_Add_Keyword_To_Armor", 0)
         _keywordDropdownOID = AddMenuOption("Select Keyword", availableKeywordNames[selectedKeywordIndex])
         AddEmptyOption()
 
-        _addKeywordTextOptionOID = AddTextOption("$TFS_Add_Selected_Keyword", "", 1)
+        _addKeywordTextOptionOID = AddTextOption("$TFS_Add_Selected_Keyword", "", 0)
 
         AddEmptyOption()
-        _removeKeywordTextOptionOID = AddTextOption("Remove Selected Keyword", "", 1)
+        _removeKeywordTextOptionOID = AddTextOption("Remove Selected Keyword", "", 0)
     else
         AddEmptyOption()
         AddHeaderOption("No Armor Selected", 1)
@@ -371,6 +370,7 @@ Function SettingsPage()
     AddHeaderOption("$TFS_General_Settings")
 
     _timeSliderOID = AddSliderOption("$TFS_Time_Threshold", timeToLoseDetection, "$TFS_After_Hours", 0)
+    _investigationThresholdSliderOID = AddSliderOption("Investigation threshold", investigationThreshold, 0)
     _detectionThresholdSliderOID = AddSliderOption("$TFS_Detection_Threshold", detectionThreshold, "{0}%", 0)
     _detectionRadiusOID = AddSliderOption("Detection Radius", detectionRadius, "{0} Units")
     AddEmptyOption()
@@ -576,6 +576,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(2.0)
         SetSliderDialogRange(1.0, 168.0)
         SetSliderDialogInterval(1.0)
+    elseif option == _investigationThresholdSliderOID
+        SetSliderDialogStartValue(investigationThreshold)
+        SetSliderDialogDefaultValue(43.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
     elseif option == _detectionThresholdSliderOID
         SetSliderDialogStartValue(detectionThreshold)
         SetSliderDialogDefaultValue(61.0)
@@ -599,6 +604,10 @@ Event OnOptionSliderAccept(int sliderID, float newValue)
         timeToLoseDetection = newValue
         SetTimeToLoseDetection(timeToLoseDetection)
         SetSliderOptionValue(_timeSliderOID, timeToLoseDetection, "$TFS_After_Hours")
+    elseif sliderID == _investigationThresholdSliderOID
+        investigationThreshold = newValue
+        SetInvestigationThreshold((investigationThreshold / 100.0) as float)
+        SetSliderOptionValue(_investigationThresholdSliderOID, investigationThreshold, "{0}%")
     elseif sliderID == _detectionThresholdSliderOID
         detectionThreshold = newValue
         SetDetectionThreshold((detectionThreshold / 100.0) as float)
@@ -617,7 +626,12 @@ EndEvent
 Event OnPageApply(String pageName)
     if pageName == modSettingsPageName
         SetTimeToLoseDetection(timeToLoseDetection)
+        SetInvestigationThreshold(investigationThreshold)
         SetDetectionThreshold(detectionThreshold)
+        SetDetectionRadius(detectionRadius)
+        SetFOVAngle(fovAngle)
+        SetUseFOVCheck(useFOVCheck)
+        SetUseLineOfSightCheck(useLOSCheck)
     endif
 EndEvent
 
@@ -674,6 +688,7 @@ Event OnOptionSelect(int a_option)
         HandleRemoveKeywordFactionAssignements()
     endif
 
+    ; Settings (FOV and LOS)
     if a_option == _useFOVOptionOID
         useFOVCheck = !useFOVCheck
         SetToggleOptionValue(_useFOVOptionOID, useFOVCheck)
@@ -701,6 +716,8 @@ EndEvent
 Event OnOptionHighlight(int a_option)
     if a_option == _timeSliderOID
         SetInfoText("$TFS_Time_Threshold_Info")
+    elseif a_option == _investigationThresholdSliderOID
+        SetInfoText("Threshold for when the NPC investigates the players last known position (Suspicios). Needs to be smaller than [Detection threshold]")
     elseif a_option == _detectionThresholdSliderOID
         SetInfoText("$TFS_Detection_Threshold_Info")
     elseif a_option == _useFOVOptionOID
