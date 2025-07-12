@@ -120,8 +120,10 @@ static void LoadCallback(SKSE::SerializationInterface *intfc) {
                     NPE::FOV_ANGLE = 120.0f;
                     NPE::USE_FOV_CHECK = true;
                     NPE::USE_LINE_OF_SIGHT_CHECK = true;
+                    NPE::NPC_LEVEL_THRESHOLD = 20.0f;
+                    NPE::ADD_TO_FACTION_THRESHOLD = 15.0f;
                 } else if (version == 2) {
-                    float tLose, tITresh, tThresh, radius, angle;
+                    float tLose, tITresh, tThresh, radius, angle, npcLevelThresh, addToFactionThresh;
                     bool fov, los;
                     if (intfc->ReadRecordData(&tLose, sizeof(tLose))) NPE::TIME_TO_LOSE_DETECTION = tLose;
                     if (intfc->ReadRecordData(&tITresh, sizeof(tITresh))) NPE::INVESTIGATION_THRESHOLD = tITresh;
@@ -130,6 +132,8 @@ static void LoadCallback(SKSE::SerializationInterface *intfc) {
                     if (intfc->ReadRecordData(&angle, sizeof(angle))) NPE::FOV_ANGLE = angle;
                     if (intfc->ReadRecordData(&fov, sizeof(fov))) NPE::USE_FOV_CHECK = fov;
                     if (intfc->ReadRecordData(&los, sizeof(los))) NPE::USE_LINE_OF_SIGHT_CHECK = los;
+                    if (intfc->ReadRecordData(&npcLevelThresh, sizeof(npcLevelThresh))) NPE::NPC_LEVEL_THRESHOLD = npcLevelThresh;
+                    if (intfc->ReadRecordData(&addToFactionThresh, sizeof(addToFactionThresh))) NPE::ADD_TO_FACTION_THRESHOLD = addToFactionThresh;
                 }
                 break;
             }
