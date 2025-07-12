@@ -5,6 +5,14 @@
 namespace NPE {
 
     void DisguiseManager::UpdateDisguiseValue(RE::Actor *actor) {
+        // Retieve all factions, where the player is already a member of (To avoid adding/remove quest related factions unnecessarily)
+        if (!_initialized) {
+            for (auto *f : allFactions) {
+                if (actor->IsInFaction(f)) _originalFactions.insert(f);
+            }
+            _initialized = true;
+        }
+
         constexpr const char *COVERED_FACE_TAG = "npeCoveredFace";
         std::unordered_map<RE::TESFaction *, float> factionDisguiseValues;
 
@@ -61,11 +69,14 @@ namespace NPE {
             std::string factionTag = GetTagForFaction(faction);
 
             // Add or remove the actor from factions based on disguise value
-            if (!actor->IsInFaction(faction) && disguiseValue > NPE::ADD_TO_FACTION_THRESHOLD) {
+            if (!actor->IsInFaction(faction) && disguiseValue > ADD_TO_FACTION_THRESHOLD) {
                 actor->AddToFaction(faction, 1);
-            } else if (disguiseValue <= NPE::ADD_TO_FACTION_THRESHOLD) {
-                actor->AddToFaction(faction, -1);
-                playerDisguiseStatus.RemoveDisguiseValue(faction);
+            } else if (disguiseValue <= ADD_TO_FACTION_THRESHOLD) {
+                // Only remove from faction if the player was NOT originally in it
+                if (!_originalFactions.count(faction)) {
+                    actor->AddToFaction(faction, -1);
+                    playerDisguiseStatus.RemoveDisguiseValue(faction);
+                }
             }
 
         }

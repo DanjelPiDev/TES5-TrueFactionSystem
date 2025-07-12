@@ -57,5 +57,16 @@ namespace NPE {
         void UpdateDisguiseValue(RE::Actor *actor);
     private:
         DisguiseManager() = default;
+
+        /**
+         * @brief Initialize the manager with default faction data. 
+           To keep track of original factions, otherwise people will be thrown out of their original factions when they un-equip armor 
+           (Could break quests). 
+           
+           
+           Example: Player is in the Thieves Guild, but when they un-equip armor, they are removed from the Thieves Guild faction.
+         */
+        std::unordered_set<RE::TESFaction *> _originalFactions;
+        bool _initialized = false;
     };
 }
