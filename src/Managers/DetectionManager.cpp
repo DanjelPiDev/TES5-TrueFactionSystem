@@ -125,7 +125,7 @@ namespace NPE {
             return;
         }
 
-        // Push the package to the actor
+        // Push the package to the actor (Does this really work? I don't know)
         npc->PutCreatedPackage(investigatePackage,
                                true,   // tempPackage: will be removed after completion
                                false,  // createdPackage: false, because it's a static one from CK 0x04039821
@@ -133,7 +133,6 @@ namespace NPE {
         );
 
         npc->EvaluatePackage(true, true);
-        spdlog::info("Package added to npc {}", npc->GetName());
 
         // Disable the marker after the package is assigned and done with it
         // investigationMarker->Disable();
@@ -144,11 +143,11 @@ namespace NPE {
         float playerDisguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
         float distance = abs(npc->GetPosition().GetDistance(player->GetPosition()));
 
-        if (distance > DETECTION_RADIUS) {
+        if (distance > NPE::DETECTION_RADIUS) {
             return false;
         }
 
-        float recognitionProbability = (DETECTION_RADIUS - distance) / DETECTION_RADIUS;
+        float recognitionProbability = (NPE::DETECTION_RADIUS - distance) / NPE::DETECTION_RADIUS;
         recognitionProbability *= (100.0f - playerDisguiseValue) / 100.0f;
 
         float distanceFactor = 1.0f / (1.0f + std::exp((distance - DETECTION_RADIUS) * 0.1f));
@@ -172,7 +171,7 @@ namespace NPE {
 
             float timeSinceLastDetected = currentInGameHours - detectionData.lastDetectedTime;
 
-            if (timeSinceLastDetected < TIME_TO_LOSE_DETECTION) {
+            if (timeSinceLastDetected < NPE::TIME_TO_LOSE_DETECTION) {
                 recognitionProbability += 0.25f;
             } else {
                 recognizedNPCs.erase(npcID);
@@ -184,10 +183,10 @@ namespace NPE {
 
         recognitionProbability = std::clamp(recognitionProbability, 0.0f, 1.0f);
 
-        if (recognitionProbability >= INVESTIGATION_THRESHOLD) {
+        if (recognitionProbability >= NPE::INVESTIGATION_THRESHOLD) {
             SKSE::GetTaskInterface()->AddTask([=] { this->TriggerInvestigateLastKnownPosition(npc, player->GetPosition()); });
         }
-        if (recognitionProbability >= DETECTION_THRESHOLD) {
+        if (recognitionProbability >= NPE::DETECTION_THRESHOLD) {
             static thread_local std::mt19937 gen(std::random_device{}());
             std::uniform_real_distribution<float> dist(0.0f, 1.0f);
             if (dist(gen) <= recognitionProbability) {
@@ -235,11 +234,11 @@ namespace NPE {
         }
 
         // If it's been long enough, forget detection and restore faction
-        if (elapsed >= TIME_TO_LOSE_DETECTION) {
+        if (elapsed >= NPE::TIME_TO_LOSE_DETECTION) {
             recognizedNPCs.erase(it);
 
             float disguiseVal = playerDisguiseStatus.GetDisguiseValue(faction);
-            if (disguiseVal > ADD_TO_FACTION_THRESHOLD) {
+            if (disguiseVal > NPE::ADD_TO_FACTION_THRESHOLD) {
                 player->AddToFaction(faction, 1);
             }
         }

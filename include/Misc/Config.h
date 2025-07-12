@@ -4,11 +4,7 @@
 #endif
 
 
-namespace NPE {
-    constexpr float NPC_LEVEL_THRESHOLD = 20.0f;
-    constexpr float ADD_TO_FACTION_THRESHOLD = 15.0f;
-
-
+namespace NPE::Config {
     constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
 
     constexpr std::chrono::seconds UPDATE_DISGUISE_INTERVAL_SECONDS(2);

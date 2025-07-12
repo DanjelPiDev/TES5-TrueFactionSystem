@@ -28,3 +28,7 @@ bool Function GetUseLineOfSightCheck() global Native
 Function SetUseLineOfSightCheck(bool akValue) global Native
 float Function GetFOVAngle() global Native
 Function SetFOVAngle(float akValue) global Native
+float Function GetNPCLevelThreshold() global Native
+Function SetNPCLevelThreshold(float akValue) global Native
+float Function GetAddToFactionThreshold() global Native
+Function SetAddToFactionThreshold(float akValue) global Native

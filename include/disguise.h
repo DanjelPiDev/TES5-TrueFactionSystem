@@ -3,7 +3,7 @@
 #include "Combat.h"
 #include "Actor/NPEActor.h"
 
-#include "Config.h"
+#include "Misc/Config.h"
 
 
 namespace NPE {

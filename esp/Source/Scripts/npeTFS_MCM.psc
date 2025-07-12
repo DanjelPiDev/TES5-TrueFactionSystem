@@ -16,6 +16,9 @@ float fovAngle
 bool useFOVCheck
 bool useLOSCheck
 
+float npcLevelThreshold
+float addToFactionThreshold
+
 ; -------- PRIVATE VARS --------
 Armor[] wornArmors
 Faction[] availableFactions
@@ -54,6 +57,9 @@ int _detectionRadiusOID
 int _useFOVOptionOID
 int _useLOSOptionOID
 int _FOVAngleOID
+int _npcLevelThresholdOID
+int _addToFactionThresholdOID
+
 ; for pagination
 int _prevPageOID
 int _nextPageOID 
@@ -110,6 +116,9 @@ Event OnConfigInit()
 
     useFOVCheck = GetUseFOVCheck()
     useLOSCheck = GetUseLineOfSightCheck()
+
+    npcLevelThreshold = GetNPCLevelThreshold()
+    addToFactionThreshold = GetAddToFactionThreshold()
 
     ; Paging
     itemsPerPage = 5
@@ -410,6 +419,9 @@ Function SettingsPage()
     _useFOVOptionOID = AddToggleOption("$TFS_Use_FOV_Check", useFOVCheck, 0)
     _FOVAngleOID = AddSliderOption("$TFS_FOV_Angle", fovAngle, "$TFS_FOV_Angle_unit", 0)
     _useLOSOptionOID = AddToggleOption("$TFS_Use_LOS_Check", useLOSCheck, 0)
+    AddEmptyOption()
+    _npcLevelThresholdOID = AddSliderOption("NPC Level Threshold", npcLevelThreshold, "{0} Levels", 0)
+    _addToFactionThresholdOID = AddSliderOption("Disguise Threshold", addToFactionThreshold, "{0}", 0)
 
     ; right row
     SetCursorPosition(1)
@@ -629,6 +641,16 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(120.0)
         SetSliderDialogRange(10.0, 360.0)
         SetSliderDialogInterval(1.0)
+    elseif option == _npcLevelThresholdOID
+        SetSliderDialogStartValue(npcLevelThreshold)
+        SetSliderDialogDefaultValue(20.0)
+        SetSliderDialogRange(0.0, 50.0)
+        SetSliderDialogInterval(1.0)
+    elseif option == _addToFactionThresholdOID
+        SetSliderDialogStartValue(addToFactionThreshold)
+        SetSliderDialogDefaultValue(15.0)
+        SetSliderDialogRange(1.0, 99.0)
+        SetSliderDialogInterval(1.0)
     endif
 EndEvent
 
@@ -653,6 +675,14 @@ Event OnOptionSliderAccept(int sliderID, float newValue)
         fovAngle = newValue
         SetFOVAngle(fovAngle)
         SetSliderOptionValue(_FOVAngleOID, fovAngle, "$TFS_FOV_ANGLE")
+    elseif sliderID == _npcLevelThresholdOID
+        npcLevelThreshold = newValue
+        SetNPCLevelThreshold(npcLevelThreshold)
+        SetSliderOptionValue(_npcLevelThresholdOID, npcLevelThreshold, "{0} Levels")
+    elseif sliderID == _addToFactionThresholdOID
+        addToFactionThreshold = newValue
+        SetAddToFactionThreshold(addToFactionThreshold)
+        SetSliderOptionValue(_addToFactionThresholdOID, addToFactionThreshold, "{0}")
     endif
 EndEvent
 
@@ -665,6 +695,8 @@ Event OnPageApply(String pageName)
         SetFOVAngle(fovAngle)
         SetUseFOVCheck(useFOVCheck)
         SetUseLineOfSightCheck(useLOSCheck)
+        SetNPCLevelThreshold(npcLevelThreshold)
+        SetAddToFactionThreshold(addToFactionThreshold)
     endif
 EndEvent
 
@@ -770,6 +802,10 @@ Event OnOptionHighlight(int a_option)
         SetInfoText("Adjust the FOV, every NPC uses the same angle [10, 360]")
     elseif a_option == _useLOSOptionOID
         SetInfoText("Decide if NPCs need the Player to be in their line of sight (independet from FOV).")
+    elseif a_option == _npcLevelThresholdOID
+        SetInfoText("The minimum level difference between an NPC and the player required before level-based detection modifiers kick in.")
+    elseif a_option == _addToFactionThresholdOID
+        SetInfoText("The disguise value above which, the player is re-added to that NPCs faction.")
     else
         SetInfoText("")
     endif

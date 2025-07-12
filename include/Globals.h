@@ -14,42 +14,58 @@
 #include "NpcDetectionData.h"
 #include "ArmorKeywordData.h"
 
-
 namespace NPE {
-    extern std::atomic<bool> backgroundTaskRunning;
-    extern std::unique_ptr<std::thread> backgroundTaskThread;
 
-    // Protected by a mutex to ensure thread safety (especially for recognizedNPCs)
-    extern std::mutex recognizedNPCsMutex;
-
-    extern std::vector<RE::TESFaction*> filteredFactions;
-    extern std::unordered_map<RE::FormID, RE::BSFixedString> factionEditorIDCache;
-
+    /* ========================================================================
+     * Forward declarations of manager classes to avoid circular dependencies.
+      ========================================================================*/
     class DetectionManager;
     class DisguiseManager;
     class EnvironmentManager;
     class NPCAlertnessManager;
     class EquipEventHandler;
 
+    /* ========================================================================
+    * Background Task Control
+      ========================================================================*/
+    extern std::atomic<bool> backgroundTaskRunning;
+    extern std::unique_ptr<std::thread> backgroundTaskThread;
+    extern std::mutex recognizedNPCsMutex;
+
+    /* ========================================================================
+    * Faction and Armor Data
+      ========================================================================*/
+    extern RE::TESDataHandler* dataHandler;
+    extern std::vector<RE::TESFaction*> filteredFactions;
+    extern std::unordered_map<RE::FormID, RE::BSFixedString> factionEditorIDCache;
+
+    extern std::vector<std::pair<std::string, RE::FormID>> factionArmorKeywords;
+    extern const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots;
+    extern std::unordered_map<RE::FormID, std::string> factionFormIDToTagMap;
+
+    
+    /* ========================================================================
+    * Managers (Singletons References)
+      ========================================================================*/
     extern DetectionManager& detectionManager;
     extern DisguiseManager& disguiseManager;
     extern EnvironmentManager& environmentManager;
     extern NPCAlertnessManager& npcAlertnessManager;
     extern EquipEventHandler& equipEventHandler;
 
-    extern std::vector<std::pair<std::string, RE::FormID>> factionArmorKeywords;
-    extern const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots;
-    extern std::unordered_map<RE::FormID, std::string> factionFormIDToTagMap;
-
+    /* ========================================================================
+    * Recognized NPCs and Player Disguise Status
+      ========================================================================*/
     extern std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
     extern PlayerDisguiseStatus playerDisguiseStatus;
     extern std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
-    extern RE::TESDataHandler* dataHandler;
-
+    
     extern std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
-
     extern const std::vector<ArmorSlot> armorBipedSlots;
 
+    /* ========================================================================
+    * Configuration Variables (MCM)
+      ========================================================================*/
     extern float TIME_TO_LOSE_DETECTION;
     extern float INVESTIGATION_THRESHOLD;
     extern float DETECTION_THRESHOLD;
@@ -58,6 +74,13 @@ namespace NPE {
 
     extern bool USE_FOV_CHECK;
     extern bool USE_LINE_OF_SIGHT_CHECK;
+
+    extern float NPC_LEVEL_THRESHOLD;
+    extern float ADD_TO_FACTION_THRESHOLD;
+
+    /* ========================================================================
+    * Getters and Setters for Configuration Variables
+      ========================================================================*/
 
     float GetTimeToLoseDetection();
     void SetTimeToLoseDetection(float v);
@@ -80,5 +103,20 @@ namespace NPE {
     float GetFOVAngle();
     void SetFOVAngle(float v);
 
+    float GetNPCLevelThreshold();
+    void SetNPCLevelThreshold(float v);
+
+    float GetAddToFactionThreshold();
+    void SetAddToFactionThreshold(float v);
+    
+    /* ========================================================================
+    * Utility Functions
+      ========================================================================*/
+    /**
+     * @brief Computes the weight for a given armor slot based on player level and slot type.
+     *
+     * @param slot The armor slot to compute the weight for.
+     * @return float The computed weight for the armor slot.
+     */
     float ComputeSlotWeight(RE::BGSBipedObjectForm::BipedObjectSlot slot);
 }

@@ -39,22 +39,22 @@ void StartBackgroundTask(Actor* player) {
                 auto elapsedDetection = now - lastCheckDetectionTime;
                 auto elapsedRace = now - lastRaceCheckTime;
 
-                if (elapsedDisguise >= NPE::UPDATE_DISGUISE_INTERVAL_SECONDS) {
+                if (elapsedDisguise >= NPE::Config::UPDATE_DISGUISE_INTERVAL_SECONDS) {
                     NPE::disguiseManager.UpdateDisguiseValue(player);
                     NPE::CheckAndReAddPlayerToFaction(player);
                     lastUpdateDisguiseCheckTime = now;
                 }
-                if (elapsedDetection >= NPE::DETECTION_INTERVAL_SECONDS) {
+                if (elapsedDetection >= NPE::Config::DETECTION_INTERVAL_SECONDS) {
                     NPE::detectionManager.CheckNPCDetection(player);
                     lastCheckDetectionTime = now;
                 }
-                if (elapsedRace >= NPE::RACE_CHECK_INTERVAL_SECONDS) {
+                if (elapsedRace >= NPE::Config::RACE_CHECK_INTERVAL_SECONDS) {
                     NPE::InitRaceDisguiseBonus();
                     lastRaceCheckTime = now;
                 }
                 lastCheckTime = now;
             }
-            std::this_thread::sleep_for(NPE::CHECK_INTERVAL_SECONDS);
+            std::this_thread::sleep_for(NPE::Config::CHECK_INTERVAL_SECONDS);
         }
     });
 }

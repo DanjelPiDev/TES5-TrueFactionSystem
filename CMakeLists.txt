@@ -25,7 +25,6 @@ configure_file(
 
 set(HEADERS
     include/Main.h
-    include/Config.h
     include/Disguise.h
     include/Faction.h
     include/Combat.h
@@ -40,6 +39,7 @@ set(HEADERS
     include/nlohmann/json.hpp
     include/nlohmann/json_fwd.hpp
     include/Misc/Utils.h
+    include/Misc/Config.h
     include/Managers/DetectionManager.h
     include/Managers/DisguiseManager.h
     include/Managers/EnvironmentManager.h

@@ -116,7 +116,15 @@ namespace NPE {
 
     void PapyrusSetUseLineOfSightCheck(RE::StaticFunctionTag*, bool useLineOfSightCheck);
 
+    float PapyrusGetFOVAngle(RE::StaticFunctionTag*);
+
     void PapyrusSetFOVAngle(RE::StaticFunctionTag*, float angle);
 
-    float PapyrusGetFOVAngle(RE::StaticFunctionTag*);
+    float PapyrusGetNPCLevelThreshold(RE::StaticFunctionTag*);
+
+    void PapyrusSetNPCLevelThreshold(RE::StaticFunctionTag*, float threshold);
+
+    float PapyrusGetAddToFactionThreshold(RE::StaticFunctionTag*);
+
+    void PapyrusSetAddToFactionThreshold(RE::StaticFunctionTag*, float threshold);
 }

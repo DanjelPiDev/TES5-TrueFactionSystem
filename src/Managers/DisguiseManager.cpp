@@ -61,9 +61,9 @@ namespace NPE {
             std::string factionTag = GetTagForFaction(faction);
 
             // Add or remove the actor from factions based on disguise value
-            if (!actor->IsInFaction(faction) && disguiseValue > ADD_TO_FACTION_THRESHOLD) {
+            if (!actor->IsInFaction(faction) && disguiseValue > NPE::ADD_TO_FACTION_THRESHOLD) {
                 actor->AddToFaction(faction, 1);
-            } else if (disguiseValue <= ADD_TO_FACTION_THRESHOLD) {
+            } else if (disguiseValue <= NPE::ADD_TO_FACTION_THRESHOLD) {
                 actor->AddToFaction(faction, -1);
                 playerDisguiseStatus.RemoveDisguiseValue(faction);
             }

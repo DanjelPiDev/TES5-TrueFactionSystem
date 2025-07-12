@@ -71,6 +71,12 @@ namespace NPE {
     float PapyrusGetFOVAngle(RE::StaticFunctionTag *) { return GetFOVAngle(); }
     void PapyrusSetFOVAngle(RE::StaticFunctionTag *, float angle) { SetFOVAngle(angle); }
 
+    float PapyrusGetNPCLevelThreshold(RE::StaticFunctionTag *) { return GetNPCLevelThreshold(); }
+    void PapyrusSetNPCLevelThreshold(RE::StaticFunctionTag *, float threshold) { SetNPCLevelThreshold(threshold); }
+
+    float PapyrusGetAddToFactionThreshold(RE::StaticFunctionTag *) { return GetAddToFactionThreshold(); }
+    void PapyrusSetAddToFactionThreshold(RE::StaticFunctionTag *, float threshold) { SetAddToFactionThreshold(threshold); }
+
     // Function to bind the Papyrus function
     bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
         vm->RegisterFunction("AddKeywordToArmor", "npeTFS_NativeFunctions", PapyrusAddKeywordToArmor);
@@ -100,6 +106,10 @@ namespace NPE {
         vm->RegisterFunction("SetUseLineOfSightCheck", "npeTFS_NativeFunctions", PapyrusSetUseLineOfSightCheck);
         vm->RegisterFunction("GetFOVAngle", "npeTFS_NativeFunctions", PapyrusGetFOVAngle);
         vm->RegisterFunction("SetFOVAngle", "npeTFS_NativeFunctions", PapyrusSetFOVAngle);
+        vm->RegisterFunction("GetNPCLevelThreshold", "npeTFS_NativeFunctions", PapyrusGetNPCLevelThreshold);
+        vm->RegisterFunction("SetNPCLevelThreshold", "npeTFS_NativeFunctions", PapyrusSetNPCLevelThreshold);
+        vm->RegisterFunction("GetAddToFactionThreshold", "npeTFS_NativeFunctions", PapyrusGetAddToFactionThreshold);
+        vm->RegisterFunction("SetAddToFactionThreshold", "npeTFS_NativeFunctions", PapyrusSetAddToFactionThreshold);
         return true;
     }
 }

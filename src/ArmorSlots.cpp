@@ -1,5 +1,6 @@
 #include "ArmorSlots.h"
 #include "Globals.h"
+
 #include <memory>
 
 
@@ -26,8 +27,7 @@ namespace NPE {
 
         // Expand the keyword array and add the new keyword
         uint32_t newNumKeywords = keywordForm->numKeywords + 1;
-        // For the memory management (Because the MCM menu is really slow)
-        auto newKeywords = std::make_unique<RE::BGSKeyword*[]>(newNumKeywords);
+        RE::BGSKeyword** newKeywords = new RE::BGSKeyword*[newNumKeywords];
 
         // Copy over existing keywords
         for (uint32_t i = 0; i < keywordForm->numKeywords; i++) {
@@ -36,11 +36,7 @@ namespace NPE {
 
         newKeywords[newNumKeywords - 1] = keyword;
 
-        if (keywordForm->keywords) {
-            delete[] keywordForm->keywords;
-        }
-
-        keywordForm->keywords = newKeywords.release();
+        keywordForm->keywords = newKeywords;
         keywordForm->numKeywords = newNumKeywords;
 
         return true;
@@ -75,15 +71,13 @@ namespace NPE {
 
         // If there's only one keyword, just clear the array
         if (keywordForm->numKeywords == 1) {
-            delete[] keywordForm->keywords;
             keywordForm->keywords = nullptr;
             keywordForm->numKeywords = 0;
             return true;
         }
 
         uint32_t newNumKeywords = keywordForm->numKeywords - 1;
-        // Same as above, for the memory management
-        auto newKeywords = std::make_unique<RE::BGSKeyword*[]>(newNumKeywords);
+        RE::BGSKeyword** newKeywords = new RE::BGSKeyword*[newNumKeywords];
 
         // Copy over the keywords except for the one to remove
         for (uint32_t i = 0, j = 0; i < keywordForm->numKeywords; i++) {
@@ -92,9 +86,7 @@ namespace NPE {
             }
         }
 
-        delete[] keywordForm->keywords;
-
-        keywordForm->keywords = newKeywords.release();
+        keywordForm->keywords = newKeywords;
         keywordForm->numKeywords = newNumKeywords;
 
         return true;
