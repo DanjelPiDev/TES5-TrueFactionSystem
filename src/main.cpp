@@ -91,6 +91,8 @@ static void SaveCallback(SKSE::SerializationInterface *intfc) {
         intfc->WriteRecordData(&NPE::FOV_ANGLE, sizeof(float));
         intfc->WriteRecordData(&NPE::USE_FOV_CHECK, sizeof(bool));
         intfc->WriteRecordData(&NPE::USE_LINE_OF_SIGHT_CHECK, sizeof(bool));
+        intfc->WriteRecordData(&NPE::NPC_LEVEL_THRESHOLD, sizeof(float));
+        intfc->WriteRecordData(&NPE::ADD_TO_FACTION_THRESHOLD, sizeof(float));
     });
 
     // Armor-Keyword-Data
