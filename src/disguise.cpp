@@ -24,11 +24,7 @@ namespace NPE {
         auto factions = GetRelevantFactions();
         for (auto &[factionName, faction] : factions) {
             if (player->IsInFaction(faction)) {
-                spdlog::info("Removing player from faction (ALL): {}", GetFactionEditorID(faction).c_str());
                 player->AddToFaction(faction, -1);
-                spdlog::info("Removed player from faction (ALL): {}", GetFactionEditorID(faction).c_str());
-            } else {
-                spdlog::info("Player NOT in faction (ALL): {}", GetFactionEditorID(faction).c_str());
             }
         }
     }
@@ -57,7 +53,7 @@ namespace NPE {
                         recognizedNPCs[npcID] = detectionData;
                     }
                 } else {
-                    RE::ConsoleLog::GetSingleton()->Print("Record length mismatch!");
+                    spdlog::warn("Load failed for NPCDetectionData with FormID {:08X}, expected length {}, got {}", npcID, sizeof(NPCDetectionData), length);
                 }
             }
         }

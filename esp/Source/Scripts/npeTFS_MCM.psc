@@ -7,6 +7,8 @@ Import npeTFS_NativeFunctions
 ; ----------------------------------------------------------------
 
 ; -------- GLOBAL VARS  --------
+bool modEnabled
+
 float timeToLoseDetection
 float investigationThreshold
 float detectionThreshold
@@ -18,6 +20,8 @@ bool useLOSCheck
 
 float npcLevelThreshold
 float addToFactionThreshold
+
+Faction[] allowedFactions
 
 ; -------- PRIVATE VARS --------
 Armor[] wornArmors
@@ -44,6 +48,7 @@ int pageIndex
 int totalPages
 
 ; Menu OIDs
+int _modEnabledOID
 int _keywordDropdownOID
 int _addKeywordTextOptionOID
 int _removeKeywordTextOptionOID
@@ -59,6 +64,7 @@ int _useLOSOptionOID
 int _FOVAngleOID
 int _npcLevelThresholdOID
 int _addToFactionThresholdOID
+int[] _allowedFactionToggleOIDs
 
 ; for pagination
 int _prevPageOID
@@ -69,6 +75,7 @@ string[] assignedKeywordsManage
 Faction[] assignedFactionsManage
 
 ; Page names
+string generalModSettingsPageName = "General"
 string playerInformationPageName = "$TFS_Player_Information"
 string armorKeywordSettingPageName = "$TFS_Armor_Keyword_Settings"
 string factionManagementPageName = "$TFS_Faction_Disguise_Setup"
@@ -100,14 +107,17 @@ Event OnConfigInit()
     endWhile
 
     ; Define pages for the MCM
-    Pages = new string[5]
-    Pages[0] = playerInformationPageName
-    Pages[1] = armorKeywordSettingPageName
-    Pages[2] = factionManagementPageName
-    Pages[3] = factionOverviewPageName
-    Pages[4] = modSettingsPageName
+    Pages = new string[6]
+    Pages[0] = generalModSettingsPageName
+    Pages[1] = playerInformationPageName
+    Pages[2] = armorKeywordSettingPageName
+    Pages[3] = factionManagementPageName
+    Pages[4] = factionOverviewPageName
+    Pages[5] = modSettingsPageName
 
     ; Load persistent settings
+    modEnabled = GetModEnabled()
+
     timeToLoseDetection = GetTimeToLoseDetection()
     investigationThreshold = GetInvestigationThreshold() * 100
     detectionThreshold = GetDetectionThreshold() * 100
@@ -119,6 +129,8 @@ Event OnConfigInit()
 
     npcLevelThreshold = GetNPCLevelThreshold()
     addToFactionThreshold = GetAddToFactionThreshold()
+
+    allowedFactions = GetAllowedFactions()
 
     ; Paging
     itemsPerPage = 5
@@ -206,6 +218,7 @@ Function InitCustomKeywords()
     availableKeywordFormIDs[18] = GetKeywordByEditorID("npeCoveredFace").GetFormID()
 
     currentFactionCount = 19
+    _allowedFactionToggleOIDs = new int[19]
 
     int index = currentFactionCount
     while index < MAX_FACTIONS
@@ -218,6 +231,13 @@ endFunction
 ; ===================================================================
 ;                               PAGES
 ; ===================================================================
+
+Function GeneralModSettingsPage()
+    SetCursorFillMode(TOP_TO_BOTTOM)
+
+    AddHeaderOption("General Mod Settings")
+    _modEnabledOID = AddToggleOption("Mod Enabled?", modEnabled, 0)
+EndFunction
 
 Function PlayerInformationPage()
     SetCursorFillMode(TOP_TO_BOTTOM)
@@ -423,12 +443,24 @@ Function SettingsPage()
     _npcLevelThresholdOID = AddSliderOption("NPC Level Threshold", npcLevelThreshold, "{0} Levels", 0)
     _addToFactionThresholdOID = AddSliderOption("Disguise Threshold", addToFactionThreshold, "{0}", 0)
 
-    ; right row
-    SetCursorPosition(1)
 
     AddHeaderOption("$TFS_Misc")
     ; Reload the factions, because of modded factions, if the user changes the load order, the FormID changes!
     _resetModTextOptionOID = AddTextOption("$TFS_Reset_Mod", "", 1) ; Not implemented!
+
+    ; right row
+    SetCursorPosition(1)
+
+    AddHeaderOption("Allowed Factions")
+    ; Allowed factions list (To toggle them)
+    int idx = 0
+    while idx < allowedFactions.length
+        Faction f = allowedFactions[idx]
+        string factionName = f.GetName()
+        bool factionState = IsFactionAllowed(f)
+        _allowedFactionToggleOIDs[idx] = AddToggleOption(factionName, factionState, 0)
+        idx += 1
+    endWhile
 EndFunction
 
 ; ===================================================================
@@ -688,6 +720,7 @@ EndEvent
 
 Event OnPageApply(String pageName)
     if pageName == modSettingsPageName
+        SetModEnabled(modEnabled)
         SetTimeToLoseDetection(timeToLoseDetection)
         SetInvestigationThreshold(investigationThreshold)
         SetDetectionThreshold(detectionThreshold)
@@ -709,7 +742,9 @@ Event OnPageReset(string a_page)
         UnloadCustomContent()
     endif
 
-    if (a_page == playerInformationPageName)
+    if (a_page == generalModSettingsPageName)
+        GeneralModSettingsPage()
+    elseif (a_page == playerInformationPageName)
         PlayerInformationPage()
     elseif (a_page == armorKeywordSettingPageName)
         InitWornArmor()
@@ -738,6 +773,11 @@ Event OnOptionSelect(int a_option)
     HandleArmorSelection(a_option)
     HandleKeywordFactionSelection(a_option)
     
+    if a_option == _modEnabledOID
+        modEnabled = !modEnabled
+        SetToggleOptionValue(_modEnabledOID, modEnabled)
+        SetModEnabled(modEnabled)
+    endif
 
     if a_option == _addKeywordTextOptionOID && selectedArmorIndex >= 0 && wornArmors[selectedArmorIndex]
         HandleAddKeywordToArmor()
@@ -764,6 +804,19 @@ Event OnOptionSelect(int a_option)
         SetToggleOptionValue(_useLOSOptionOID, useLOSCheck)
         SetUseLineOfSightCheck(useLOSCheck)
     endif
+
+    ; allowed faction loop
+    int idx = 0
+    bool break = false
+    while idx < _allowedFactionToggleOIDs.length && !break
+        if a_option == _allowedFactionToggleOIDs[idx]
+            bool newFactionState = !IsFactionAllowed(allowedFactions[idx])
+            SetToggleOptionValue(_allowedFactionToggleOIDs[idx], newFactionState)
+            UpdatedAllowedFactions(allowedFactions[idx], newFactionState)
+            ; love it xD
+            break = true
+        endif
+    endWhile
 
     ; Paging
     if a_option == _nextPageOID
@@ -806,6 +859,8 @@ Event OnOptionHighlight(int a_option)
         SetInfoText("The minimum level difference between an NPC and the player required before level-based detection modifiers kick in.")
     elseif a_option == _addToFactionThresholdOID
         SetInfoText("The disguise value above which, the player is re-added to that NPCs faction.")
+    elseif a_option == _modEnabledOID
+        SetInfoText("Enable/Disable TrueFactionSystem")
     else
         SetInfoText("")
     endif

@@ -50,6 +50,9 @@ namespace NPE {
         return GetRaceBonusValueForFaction(faction);
     }
 
+    bool PapyrusGetModEnabled(RE::StaticFunctionTag *) { return GetModEnabled(); }
+    void PapyrusSetModEnabled(RE::StaticFunctionTag *, bool b) { SetModEnabled(b); }
+
     float PapyrusGetTimeToLoseDetection(RE::StaticFunctionTag *) { return GetTimeToLoseDetection(); }
     void PapyrusSetTimeToLoseDetection(RE::StaticFunctionTag *, float v) { SetTimeToLoseDetection(v); }
 
@@ -77,8 +80,37 @@ namespace NPE {
     float PapyrusGetAddToFactionThreshold(RE::StaticFunctionTag *) { return GetAddToFactionThreshold(); }
     void PapyrusSetAddToFactionThreshold(RE::StaticFunctionTag *, float threshold) { SetAddToFactionThreshold(threshold); }
 
+    std::vector<RE::TESFaction *> PapyrusGetAllowedFactions(RE::StaticFunctionTag *) {
+        std::vector<RE::TESFaction *> out;
+        auto map = GetAllowedFactions();
+
+        for (auto const &[formID, allowed] : map) {
+            if (!allowed) continue;
+
+            if (auto *form = RE::TESForm::LookupByID(formID)) {
+                if (auto *fac = form->As<RE::TESFaction>()) out.push_back(fac);
+            }
+        }
+        return out;
+    }
+
+    bool PapyrusIsFactionAllowed(RE::StaticFunctionTag *, RE::TESFaction *faction) {
+        if (!faction) return false;
+
+        auto map = GetAllowedFactions();
+        auto it = map.find(faction->GetFormID());
+        return (it != map.end()) ? it->second : false;
+    }
+
+    void PapyrusUpdateAllowedFactions(RE::StaticFunctionTag *, RE::TESFaction *faction, bool b) { 
+        RE::FormID factionID = faction->GetFormID();
+        UpdatedAllowedFactions(factionID, b); 
+    }
+
     // Function to bind the Papyrus function
     bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
+        vm->RegisterFunction("GetModEnabled", "npeTFS_NativeFunctions", PapyrusGetModEnabled);
+        vm->RegisterFunction("SetModEnabled", "npeTFS_NativeFunctions", PapyrusSetModEnabled);
         vm->RegisterFunction("AddKeywordToArmor", "npeTFS_NativeFunctions", PapyrusAddKeywordToArmor);
         vm->RegisterFunction("RemoveKeywordFromArmor", "npeTFS_NativeFunctions", PapyrusRemoveKeywordFromArmor);
         vm->RegisterFunction("GetKeywordByEditorID", "npeTFS_NativeFunctions", PapyrusGetKeywordByEditorID);
@@ -110,6 +142,9 @@ namespace NPE {
         vm->RegisterFunction("SetNPCLevelThreshold", "npeTFS_NativeFunctions", PapyrusSetNPCLevelThreshold);
         vm->RegisterFunction("GetAddToFactionThreshold", "npeTFS_NativeFunctions", PapyrusGetAddToFactionThreshold);
         vm->RegisterFunction("SetAddToFactionThreshold", "npeTFS_NativeFunctions", PapyrusSetAddToFactionThreshold);
+        vm->RegisterFunction("GetAllowedFactions", "npeTFS_NativeFunctions", PapyrusGetAllowedFactions);
+        vm->RegisterFunction("IsFactionAllowed", "npeTFS_NativeFunctions", PapyrusIsFactionAllowed);
+        vm->RegisterFunction("UpdatedAllowedFactions", "npeTFS_NativeFunctions", PapyrusUpdateAllowedFactions);
         return true;
     }
 }

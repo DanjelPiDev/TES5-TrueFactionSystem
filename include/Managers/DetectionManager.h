@@ -15,6 +15,8 @@ namespace NPE {
             return instance;
         }
 
+        void RegisterEventHandlers();
+
         /**
          * @brief Check if the player is detected by NPCs based on disguise value.
          *
@@ -89,6 +91,8 @@ namespace NPE {
          * @param a_intfc Serialization interface for reading data.
          */
         void Load(SKSE::SerializationInterface *a_intfc);
+
+        void UnregisterEventHandlers();
     private:
         DetectionManager() = default;
         /**
@@ -100,6 +104,14 @@ namespace NPE {
          * @return float The adjusted detection probability.
          */
         float AdjustProbabilityByDistance(float detectionProbability, float distance, float maxDistance);
+
+        // Register container changed event handler for disguise updates (Stealing, Lockpicking)
+        class ContainerChangedEventHandler : public RE::BSTEventSink<RE::TESContainerChangedEvent> {
+        public:
+            virtual RE::BSEventNotifyControl ProcessEvent(const RE::TESContainerChangedEvent *evn,
+                                                          RE::BSTEventSource<RE::TESContainerChangedEvent> *) override;
+        };
+        static ContainerChangedEventHandler _containerChangedHandler;
     };
 
 }

@@ -92,6 +92,10 @@ namespace NPE {
 
     RE::BGSKeyword* PapyrusHandleAddFactionFromMCM(RE::StaticFunctionTag*, RE::TESFaction* faction);
 
+    void PapyrusSetModEnabled(RE::StaticFunctionTag*, bool b);
+
+    bool PapyrusGetModEnabled(RE::StaticFunctionTag*);
+
     float PapyrusGetTimeToLoseDetection(RE::StaticFunctionTag*);
 
     void PapyrusSetTimeToLoseDetection(RE::StaticFunctionTag*, float time);
@@ -127,4 +131,10 @@ namespace NPE {
     float PapyrusGetAddToFactionThreshold(RE::StaticFunctionTag*);
 
     void PapyrusSetAddToFactionThreshold(RE::StaticFunctionTag*, float threshold);
+
+    std::vector<RE::TESFaction*> PapyrusGetAllowedFactions(RE::StaticFunctionTag*);
+
+    bool PapyrusIsFactionAllowed(RE::StaticFunctionTag*, RE::TESFaction* faction);
+
+    void PapyrusUpdateAllowedFactions(RE::StaticFunctionTag*, RE::TESFaction *faction, bool b);
 }

@@ -100,6 +100,8 @@ namespace NPE {
     /* ========================================================================
     * Configurable Variables (MCM)
       ========================================================================*/
+    bool MOD_ENABLED = true;
+
     float TIME_TO_LOSE_DETECTION = 2.0f;    /// Time (in hours) for NPC to no longer "remember" the players disguise
     float INVESTIGATION_THRESHOLD = 0.43f;  /// Threshold for NPC to start investigating
     float DETECTION_THRESHOLD = 0.61f;      /// Threshold for NPC to fully detect the player
@@ -112,6 +114,25 @@ namespace NPE {
     float NPC_LEVEL_THRESHOLD = 20.0f;      /// Minimum NPC level for detection interactions
     float ADD_TO_FACTION_THRESHOLD = 15.0f; /// Disguise Threshold for adding the player to a faction
 
+    std::unordered_map<RE::FormID, bool> ALLOWED_FACTIONS = {
+        {0x0001BCC0, true},  // Bandit Faction
+        {0x0002BF9A, true},  // Imperial Faction
+        {0x00072834, true},  // Blades Faction
+        {0x00048362, false},  // Companions Faction (Not allowed because of quests)
+        {0x0002816E, true},  // Dawnstar Faction
+        {0x00028170, true},  // Falkreath Faction
+        {0x00043599, true},  // Forsworn Faction
+        {0x0002816C, true},  // Markarth Faction
+        {0x0002816D, true},  // Morthal Faction
+        {0x000DEED6, false},  // Nightingale Faction (Not allowed because of quests)
+        {0x0002816B, true},  // Riften Faction
+        {0x00029DB0, true},  // Solitude Faction
+        {0x00028849, true},  // Stormcloaks Faction
+        {0x000267EA, true},  // Whiterun Faction
+        {0x000267E3, true},  // Windhelm Faction
+        {0x00014217, true},  // Winterhold Faction
+        {0x00039F26, true}   // Thalmor Faction
+    };
 
     float ComputeSlotWeight(RE::BGSBipedObjectForm::BipedObjectSlot slot) {
         float baseWeight = 0.0f;
@@ -137,6 +158,23 @@ namespace NPE {
     /* ========================================================================
      * Getters and Setters for Configuration Variables
       ========================================================================*/
+
+    bool GetModEnabled() { return MOD_ENABLED; }
+    void SetModEnabled(bool enabled) {
+        MOD_ENABLED = enabled;
+        if (!enabled) {
+            //StopBackgroundTask();
+            UnregisterEventHandlers();
+            spdlog::info("TFS disabled!");
+        } else {
+            RE::Actor* player = RE::PlayerCharacter::GetSingleton();
+            if (player) {
+                //StartBackgroundTask(player);
+                RegisterEventHandlers();
+                spdlog::info("TFS enabled!");
+            }
+        }
+    }
 
     float GetTimeToLoseDetection() { return TIME_TO_LOSE_DETECTION; }
     void SetTimeToLoseDetection(float v) { TIME_TO_LOSE_DETECTION = v; }
@@ -164,4 +202,7 @@ namespace NPE {
 
     float GetAddToFactionThreshold() { return ADD_TO_FACTION_THRESHOLD; }
     void SetAddToFactionThreshold(float v) { ADD_TO_FACTION_THRESHOLD = v; }
+
+    std::unordered_map<RE::FormID, bool> GetAllowedFactions() { return ALLOWED_FACTIONS; }
+    void UpdatedAllowedFactions(RE::FormID faction, bool b) { ALLOWED_FACTIONS[faction] = b; }
 }

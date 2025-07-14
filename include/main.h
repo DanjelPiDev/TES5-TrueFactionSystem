@@ -13,6 +13,10 @@
 
 extern std::vector<RE::TESFaction*> allFactions;
 
+void RegisterEventHandlers();
+
+void UnregisterEventHandlers();
+
 // Function to start a background task for periodically updating disguise values and NPC detection
 void StartBackgroundTask(RE::Actor* player);
 

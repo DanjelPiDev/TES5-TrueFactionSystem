@@ -32,3 +32,8 @@ float Function GetNPCLevelThreshold() global Native
 Function SetNPCLevelThreshold(float akValue) global Native
 float Function GetAddToFactionThreshold() global Native
 Function SetAddToFactionThreshold(float akValue) global Native
+Faction[] Function GetAllowedFactions() global Native
+bool Function IsFactionAllowed(Faction akFaction) global Native
+Function UpdatedAllowedFactions(Faction akFaction, bool akValue) global Native
+bool Function GetModEnabled() global Native
+Function SetModEnabled(bool akValue) global Native

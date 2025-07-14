@@ -3,6 +3,49 @@
 
 
 namespace NPE {
+
+    /*
+     * This one is used to handle the TESContainerChangedEvent, if the player steals from an NPC (or vice versa? Is that possible? Should look into it).
+     * 
+     * Probably refactor this into a separate class later, but for now it is fine.
+    */
+    DetectionManager::ContainerChangedEventHandler DetectionManager::_containerChangedHandler;
+
+    void DetectionManager::RegisterEventHandlers() {
+        if (auto evtSrc = RE::ScriptEventSourceHolder::GetSingleton()) {
+            evtSrc->AddEventSink<RE::TESContainerChangedEvent>(&_containerChangedHandler);
+            spdlog::info("ContainerChangedEventHandler registered in DetectionManager");
+        }
+    }
+
+    RE::BSEventNotifyControl DetectionManager::ContainerChangedEventHandler::ProcessEvent(
+        const RE::TESContainerChangedEvent *evn, RE::BSTEventSource<RE::TESContainerChangedEvent> *) {
+
+        if (!evn) return RE::BSEventNotifyControl::kContinue;
+        auto player = RE::PlayerCharacter::GetSingleton();
+        if (!player) return RE::BSEventNotifyControl::kContinue;
+
+        RE::TESObjectREFR *refr = nullptr;
+        RE::Actor *npc = nullptr;
+        // NPC -> Player
+        if (evn->newContainer == player->GetFormID()) {
+            refr = RE::TESForm::LookupByID<RE::TESObjectREFR>(evn->oldContainer);
+        }
+        // Player -> NPC
+        else if (evn->oldContainer == player->GetFormID()) {
+            refr = RE::TESForm::LookupByID<RE::TESObjectREFR>(evn->newContainer);
+        }
+        if (refr) npc = refr->As<RE::Actor>();
+        if (!npc || npc == player) return RE::BSEventNotifyControl::kContinue;
+
+        RE::TESFaction *faction = GetFactionByActor(npc);
+
+        if (faction) {
+            SKSE::GetTaskInterface()->AddTask([=] { DetectionManager::GetInstance().StartCombat(npc, player, faction); });
+        }
+        return RE::BSEventNotifyControl::kContinue;
+    }
+
     /**
      * Check if NPCs detect the player based the player's disguise value
      * @param **player** The player actor
@@ -200,7 +243,7 @@ namespace NPE {
     bool DetectionManager::DetectCrimeWhileDisguised(RE::Actor* npc, RE::Actor* player) {
         int detectionLevel = player->RequestDetectionLevel(npc);
         bool isLockpicking = player->IsLockpick();
-        // bool isStealing = player->PickUpObject();
+        // Stealing implemented via EventHandler (ContainerChangedEventHandler)
 
         if (detectionLevel > 1 && isLockpicking) {
             if (!player->IsSneaking()) {
@@ -239,7 +282,10 @@ namespace NPE {
 
             float disguiseVal = playerDisguiseStatus.GetDisguiseValue(faction);
             if (disguiseVal > NPE::ADD_TO_FACTION_THRESHOLD) {
-                player->AddToFaction(faction, 1);
+                // No modded factions, so we can safely add the player to the faction (Mod support later on!)
+                if (ALLOWED_FACTIONS.count(faction->GetFormID()) && ALLOWED_FACTIONS[faction->GetFormID()]) {
+                    player->AddToFaction(faction, 1);
+                }
             }
         }
     }
@@ -252,6 +298,9 @@ namespace NPE {
     void DetectionManager::StartCombat(RE::Actor *npc, RE::Actor *player, RE::TESFaction *npcFaction) {
         // TODO: Rework
         if (!npc || !player) {
+            return;
+        }
+        if (ALLOWED_FACTIONS.count(npcFaction->GetFormID()) && !ALLOWED_FACTIONS[npcFaction->GetFormID()]) {
             return;
         }
 
@@ -288,4 +337,14 @@ namespace NPE {
             recognizedNPCs[npcID] = data;
         }
     }
+
+    void DetectionManager::UnregisterEventHandlers() {
+        if (auto evtSrc = RE::ScriptEventSourceHolder::GetSingleton()) {
+            evtSrc->RemoveEventSink<RE::TESContainerChangedEvent>(&_containerChangedHandler);
+            spdlog::info("ContainerChangedEventHandler unregistered in DetectionManager");
+        } else {
+            spdlog::warn("UnregisterEventHandlers: ScriptEventSourceHolder not available.");
+        }
+    }
+
 }

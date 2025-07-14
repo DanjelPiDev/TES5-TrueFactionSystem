@@ -66,6 +66,8 @@ namespace NPE {
     /* ========================================================================
     * Configuration Variables (MCM)
       ========================================================================*/
+    extern bool MOD_ENABLED;
+
     extern float TIME_TO_LOSE_DETECTION;
     extern float INVESTIGATION_THRESHOLD;
     extern float DETECTION_THRESHOLD;
@@ -78,9 +80,14 @@ namespace NPE {
     extern float NPC_LEVEL_THRESHOLD;
     extern float ADD_TO_FACTION_THRESHOLD;
 
+    extern std::unordered_map<RE::FormID, bool> ALLOWED_FACTIONS;
+
     /* ========================================================================
     * Getters and Setters for Configuration Variables
       ========================================================================*/
+
+    bool GetModEnabled();
+    void SetModEnabled(bool enabled);
 
     float GetTimeToLoseDetection();
     void SetTimeToLoseDetection(float v);
@@ -108,6 +115,9 @@ namespace NPE {
 
     float GetAddToFactionThreshold();
     void SetAddToFactionThreshold(float v);
+
+    std::unordered_map<RE::FormID, bool> GetAllowedFactions();
+    void UpdatedAllowedFactions(RE::FormID faction, bool b);
     
     /* ========================================================================
     * Utility Functions

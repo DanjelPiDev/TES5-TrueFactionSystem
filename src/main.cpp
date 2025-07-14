@@ -20,7 +20,10 @@ RE::TESDataHandler* dataHandler;
 std::vector<RE::TESFaction*> allFactions;
 
 enum : uint32_t {
-    kRecordHeader = 'NPE1',         // Header: TIME_TO_LOSE_DETECTION, INVESTIGATION_THRESHOLD, DETECTION_THRESHOLD, DETECTION_RADIUS, FOV_ANGLE, USE_FOV_CHECK, USE_LINE_OF_SIGHT_CHECK
+    kRecordHeader = 'NPE1',         // Header: TIME_TO_LOSE_DETECTION, INVESTIGATION_THRESHOLD, 
+                                    // DETECTION_THRESHOLD, DETECTION_RADIUS, FOV_ANGLE, USE_FOV_CHECK, 
+                                    // USE_LINE_OF_SIGHT_CHECK, NPC_LEVEL_THRESHOLD, ADD_TO_FACTION_THRESHOLD,
+                                    // MOD_ENABLED
     kRecordArmor = 'NPE2',          // ArmorKeywordData
     kRecordDetection = 'NPE3',      // recognizedNPCs
     kRecordDisguiseStatus = 'NPE4'  // PlayerDisguiseStatus
@@ -59,6 +62,45 @@ void StartBackgroundTask(Actor* player) {
     });
 }
 
+void RegisterEventHandlers() {
+    auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
+    if (equipEventSource) {
+        equipEventSource->AddEventSink(&NPE::equipEventHandler);
+        spdlog::info("EquipEventHandler registered!");
+    } else {
+        spdlog::warn("EquipEventHandler: ScriptEventSourceHolder not available.");
+    }
+
+    auto hitEventSource = RE::ScriptEventSourceHolder::GetSingleton();
+    if (hitEventSource) {
+        hitEventSource->AddEventSink(&hitEventHandler);
+        spdlog::info("HitEventHandler registered!");
+    } else {
+        spdlog::warn("HitEventHandler: ScriptEventSourceHolder not available.");
+    }
+
+    NPE::DetectionManager::GetInstance().RegisterEventHandlers();
+    spdlog::info("DetectionManager event handlers registered.");
+}
+
+
+void UnregisterEventHandlers() {
+    auto source = RE::ScriptEventSourceHolder::GetSingleton();
+    if (source) {
+        source->RemoveEventSink(&NPE::equipEventHandler);
+        spdlog::info("EquipEventHandler unregistered.");
+
+        source->RemoveEventSink(&hitEventHandler);
+        spdlog::info("HitEventHandler unregistered.");
+    } else {
+        spdlog::warn("UnregisterEventHandlers: ScriptEventSourceHolder not available.");
+    }
+
+    NPE::DetectionManager::GetInstance().UnregisterEventHandlers();
+    spdlog::info("DetectionManager event handlers unregistered.");
+}
+
+
 void StopBackgroundTask() {
     NPE::backgroundTaskRunning.store(false);
     if (NPE::backgroundTaskThread && NPE::backgroundTaskThread->joinable()) {
@@ -93,6 +135,7 @@ static void SaveCallback(SKSE::SerializationInterface *intfc) {
         intfc->WriteRecordData(&NPE::USE_LINE_OF_SIGHT_CHECK, sizeof(bool));
         intfc->WriteRecordData(&NPE::NPC_LEVEL_THRESHOLD, sizeof(float));
         intfc->WriteRecordData(&NPE::ADD_TO_FACTION_THRESHOLD, sizeof(float));
+        intfc->WriteRecordData(&NPE::MOD_ENABLED, sizeof(bool));
     });
 
     // Armor-Keyword-Data
@@ -122,8 +165,9 @@ static void LoadCallback(SKSE::SerializationInterface *intfc) {
                     NPE::USE_LINE_OF_SIGHT_CHECK = true;
                     NPE::NPC_LEVEL_THRESHOLD = 20.0f;
                     NPE::ADD_TO_FACTION_THRESHOLD = 15.0f;
+                    NPE::MOD_ENABLED = true;
                 } else if (version == 2) {
-                    float tLose, tITresh, tThresh, radius, angle, npcLevelThresh, addToFactionThresh;
+                    float tLose, tITresh, tThresh, radius, angle, npcLevelThresh, addToFactionThresh, modEnabled;
                     bool fov, los;
                     if (intfc->ReadRecordData(&tLose, sizeof(tLose))) NPE::TIME_TO_LOSE_DETECTION = tLose;
                     if (intfc->ReadRecordData(&tITresh, sizeof(tITresh))) NPE::INVESTIGATION_THRESHOLD = tITresh;
@@ -134,6 +178,7 @@ static void LoadCallback(SKSE::SerializationInterface *intfc) {
                     if (intfc->ReadRecordData(&los, sizeof(los))) NPE::USE_LINE_OF_SIGHT_CHECK = los;
                     if (intfc->ReadRecordData(&npcLevelThresh, sizeof(npcLevelThresh))) NPE::NPC_LEVEL_THRESHOLD = npcLevelThresh;
                     if (intfc->ReadRecordData(&addToFactionThresh, sizeof(addToFactionThresh))) NPE::ADD_TO_FACTION_THRESHOLD = addToFactionThresh;
+                    if (intfc->ReadRecordData(&modEnabled, sizeof(modEnabled))) NPE::MOD_ENABLED = modEnabled;
                 }
                 break;
             }
@@ -230,31 +275,25 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
 
             InitializeGlobalData();
 
-            auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
-            if (equipEventSource) {
-                equipEventSource->AddEventSink(&NPE::equipEventHandler);
-                spdlog::info("EquipEventHandler registered!");
+            if (NPE::MOD_ENABLED) {
+                RegisterEventHandlers();
+
+                Actor *player = PlayerCharacter::GetSingleton();
+                if (player) {
+                    lastCheckTime = std::chrono::steady_clock::now();
+                    lastUpdateDisguiseCheckTime = lastCheckTime;
+                    lastCheckDetectionTime = lastCheckTime;
+                    lastRaceCheckTime = lastCheckTime;
+
+                    StartBackgroundTask(player);
+                }
+
+                spdlog::info("TFS successfully loaded!");
+                spdlog::dump_backtrace();
+                RE::ConsoleLog::GetSingleton()->Print("TFS successfully loaded!");
+            } else {
+                spdlog::warn("TFS is disabled in the configuration. No functionality will be available.");
             }
-
-            auto hitEventSource = RE::ScriptEventSourceHolder::GetSingleton();
-            if (hitEventSource) {
-                hitEventSource->AddEventSink(&hitEventHandler);
-                spdlog::info("HitEventHandler registered!");
-            }
-
-            Actor* player = PlayerCharacter::GetSingleton();
-            if (player) {
-                lastCheckTime = std::chrono::steady_clock::now();
-                lastUpdateDisguiseCheckTime = lastCheckTime;
-                lastCheckDetectionTime = lastCheckTime;
-                lastRaceCheckTime = lastCheckTime;
-
-                StartBackgroundTask(player);
-            }
-
-            spdlog::info("TFS successfully loaded!");
-            spdlog::dump_backtrace();
-            RE::ConsoleLog::GetSingleton()->Print("TFS successfully loaded!");
         }
     });
 

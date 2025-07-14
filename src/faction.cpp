@@ -7,7 +7,8 @@ namespace NPE {
     const std::vector<std::string> predefinedKeywords = {
         "npeFaction1",  "npeFaction2",  "npeFaction3",  "npeFaction4",  "npeFaction5",  "npeFaction6",  "npeFaction7",
         "npeFaction8",  "npeFaction9",  "npeFaction10", "npeFaction11", "npeFaction12", "npeFaction13", "npeFaction14",
-        "npeFaction15", "npeFaction16", "npeFaction17", "npeFaction18", "npeFaction19", "npeFaction20"};
+        "npeFaction15", "npeFaction16", "npeFaction17", "npeFaction18", "npeFaction19", "npeFaction20"
+    };
 
     std::unordered_map<RE::FormID, std::string> assignedKeywordsMap;
 

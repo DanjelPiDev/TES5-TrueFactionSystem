@@ -6,9 +6,12 @@ namespace NPE {
 
     void DisguiseManager::UpdateDisguiseValue(RE::Actor *actor) {
         // Retieve all factions, where the player is already a member of (To avoid adding/remove quest related factions unnecessarily)
+        // Still not perfect, need to check during gameplay, if a quest added or removed the player from a faction
         if (!_initialized) {
             for (auto *f : allFactions) {
-                if (actor->IsInFaction(f)) _originalFactions.insert(f);
+                if (actor->IsInFaction(f)) {
+                    _originalFactions.insert(f);
+                }
             }
             _initialized = true;
         }
@@ -67,6 +70,11 @@ namespace NPE {
             playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
 
             std::string factionTag = GetTagForFaction(faction);
+
+            if (ALLOWED_FACTIONS.count(faction->GetFormID()) && !ALLOWED_FACTIONS[faction->GetFormID()]) {
+                // Skip factions that are not allowed (To prevent breaking quests)
+                continue;
+            }
 
             // Add or remove the actor from factions based on disguise value
             if (!actor->IsInFaction(faction) && disguiseValue > ADD_TO_FACTION_THRESHOLD) {
