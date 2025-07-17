@@ -5,6 +5,8 @@
 namespace NPE {
 
     void DisguiseManager::UpdateDisguiseValue(RE::Actor *actor) {
+        if (!NPE::MOD_ENABLED) return;
+
         // Retieve all factions, where the player is already a member of (To avoid adding/remove quest related factions unnecessarily)
         // Still not perfect, need to check during gameplay, if a quest added or removed the player from a faction
         if (!_initialized) {

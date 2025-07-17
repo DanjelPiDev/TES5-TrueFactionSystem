@@ -275,25 +275,23 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
 
             InitializeGlobalData();
 
-            if (NPE::MOD_ENABLED) {
-                RegisterEventHandlers();
+            RegisterEventHandlers();
 
-                Actor *player = PlayerCharacter::GetSingleton();
-                if (player) {
-                    lastCheckTime = std::chrono::steady_clock::now();
-                    lastUpdateDisguiseCheckTime = lastCheckTime;
-                    lastCheckDetectionTime = lastCheckTime;
-                    lastRaceCheckTime = lastCheckTime;
+            Actor *player = PlayerCharacter::GetSingleton();
+            if (player) {
+                lastCheckTime = std::chrono::steady_clock::now();
+                lastUpdateDisguiseCheckTime = lastCheckTime;
+                lastCheckDetectionTime = lastCheckTime;
+                lastRaceCheckTime = lastCheckTime;
 
-                    StartBackgroundTask(player);
-                }
-
-                spdlog::info("TFS successfully loaded!");
-                spdlog::dump_backtrace();
-                RE::ConsoleLog::GetSingleton()->Print("TFS successfully loaded!");
-            } else {
-                spdlog::warn("TFS is disabled in the configuration. No functionality will be available.");
+                StartBackgroundTask(player);
             }
+
+            SKSE::GetTaskInterface()->AddTask([] { NPE::FactionHook::Install(); });
+            spdlog::info("FactionHook installed.");
+
+            spdlog::info("TFS successfully loaded!");
+            spdlog::dump_backtrace();
         }
     });
 

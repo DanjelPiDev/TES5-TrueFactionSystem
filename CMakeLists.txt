@@ -45,6 +45,7 @@ set(HEADERS
     include/Managers/EnvironmentManager.h
     include/Managers/NPCAlertnessManager.h
     include/Managers/EquipmentManager.h
+    include/Hooks/FactionHook.h
 )
 
 # Add source files from the src directory
@@ -66,6 +67,7 @@ set(SOURCES
     src/Managers/EnvironmentManager.cpp
     src/Managers/NPCAlertnessManager.cpp
     src/Managers/EquipmentManager.cpp
+    src/Hooks/FactionHook.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/version.rc
 )
 

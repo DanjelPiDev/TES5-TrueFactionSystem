@@ -51,6 +51,8 @@ namespace NPE {
      * @param **player** The player actor
      */
     void DetectionManager::CheckNPCDetection(RE::Actor *player) {
+        if (!NPE::MOD_ENABLED) return;
+
         RE::TESObjectCELL *currentCell = player->GetParentCell();
         if (!currentCell) {
             // Player is not in a cell (e.g. in the main menu), return
@@ -127,7 +129,7 @@ namespace NPE {
     }
 
     void DetectionManager::TriggerInvestigateLastKnownPosition(RE::Actor *npc, const RE::NiPoint3 &lastKnownPos) {
-        if (!npc || npc->IsDead() || npc->IsInCombat()) return;
+        if (!NPE::MOD_ENABLED || !npc || npc->IsDead() || npc->IsInCombat()) return;
         // AIPackage: npeInvestigatePlayerPosition: 0x04039821
         // Keyword: npeInvestigate: 0x0403BFBB, 
         // Activator: npeInvestigationActivator: 0x0403BFBC (Has Keyword npeInvestigate)
@@ -183,6 +185,8 @@ namespace NPE {
     }
 
     bool DetectionManager::NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
+        if (!NPE::MOD_ENABLED) return false;
+
         float playerDisguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
         float distance = abs(npc->GetPosition().GetDistance(player->GetPosition()));
 

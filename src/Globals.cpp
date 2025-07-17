@@ -100,7 +100,7 @@ namespace NPE {
     /* ========================================================================
     * Configurable Variables (MCM)
       ========================================================================*/
-    bool MOD_ENABLED = true;
+    bool MOD_ENABLED = true;                /// Whether the True Faction System is enabled
 
     float TIME_TO_LOSE_DETECTION = 2.0f;    /// Time (in hours) for NPC to no longer "remember" the players disguise
     float INVESTIGATION_THRESHOLD = 0.43f;  /// Threshold for NPC to start investigating

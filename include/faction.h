@@ -3,9 +3,7 @@
 #include "Main.h"
 
 
-
 namespace NPE {
-    // Faction utility functions
     /**
      * @brief Get the faction based on the actor's worn armor tags.
      *

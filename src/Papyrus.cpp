@@ -142,9 +142,9 @@ namespace NPE {
         vm->RegisterFunction("SetNPCLevelThreshold", "npeTFS_NativeFunctions", PapyrusSetNPCLevelThreshold);
         vm->RegisterFunction("GetAddToFactionThreshold", "npeTFS_NativeFunctions", PapyrusGetAddToFactionThreshold);
         vm->RegisterFunction("SetAddToFactionThreshold", "npeTFS_NativeFunctions", PapyrusSetAddToFactionThreshold);
-        vm->RegisterFunction("GetAllowedFactions", "npeTFS_NativeFunctions", PapyrusGetAllowedFactions);
-        vm->RegisterFunction("IsFactionAllowed", "npeTFS_NativeFunctions", PapyrusIsFactionAllowed);
-        vm->RegisterFunction("UpdatedAllowedFactions", "npeTFS_NativeFunctions", PapyrusUpdateAllowedFactions);
+        //vm->RegisterFunction("GetAllowedFactions", "npeTFS_NativeFunctions", PapyrusGetAllowedFactions);
+        //vm->RegisterFunction("IsFactionAllowed", "npeTFS_NativeFunctions", PapyrusIsFactionAllowed);
+        //vm->RegisterFunction("UpdatedAllowedFactions", "npeTFS_NativeFunctions", PapyrusUpdateAllowedFactions);
         return true;
     }
 }

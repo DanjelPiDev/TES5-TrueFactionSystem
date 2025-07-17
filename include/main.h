@@ -6,6 +6,8 @@
 #include "Combat.h"
 #include "Papyrus.h"
 
+#include "Hooks/FactionHook.h"
+
 #include "RE/B/BSFixedString.h"
 
 #include "SKSE/Trampoline.h"

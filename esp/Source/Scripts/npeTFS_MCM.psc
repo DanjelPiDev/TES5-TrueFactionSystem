@@ -75,12 +75,12 @@ string[] assignedKeywordsManage
 Faction[] assignedFactionsManage
 
 ; Page names
-string generalModSettingsPageName = "General"
+string generalModSettingsPageName = "$TFS_General_Settings"
 string playerInformationPageName = "$TFS_Player_Information"
 string armorKeywordSettingPageName = "$TFS_Armor_Keyword_Settings"
 string factionManagementPageName = "$TFS_Faction_Disguise_Setup"
 string factionOverviewPageName = "$TFS_Disguise_Assignments"
-string modSettingsPageName = "$TFS_General_Settings"
+string modSettingsPageName = "$TFS_Mod_Detail_Settings"
 
 Event OnConfigInit()
     ; Load icon for menu (Still not working)
