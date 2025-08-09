@@ -287,8 +287,9 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
                 StartBackgroundTask(player);
             }
 
-            SKSE::GetTaskInterface()->AddTask([] { NPE::FactionHook::Install(); });
-            spdlog::info("FactionHook installed.");
+            // Commented out for now, as it is not working properly
+            //SKSE::GetTaskInterface()->AddTask([] { NPE::FactionHook::Install(); });
+            //spdlog::info("FactionHook installed.");
 
             spdlog::info("TFS successfully loaded!");
             spdlog::dump_backtrace();

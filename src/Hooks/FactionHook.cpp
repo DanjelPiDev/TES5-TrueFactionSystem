@@ -23,6 +23,7 @@ namespace NPE {
     }
 
     void FactionHook::HookedAddToFaction(RE::Actor* actor, RE::TESFaction* faction, std::int8_t rank) {
+        // TODO: Check why this is not working
         if (actor && faction) {
             if (actor->IsPlayerRef()) {
                 spdlog::info("[HOOK] Player added to faction: {}", faction->GetName());
